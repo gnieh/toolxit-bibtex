@@ -3,34 +3,32 @@
  */
 package li.publications.bibtex.tree
 
-/**
- * @author Lucas Satabin
- *
- */
-sealed trait BstNode
+final case class BstFile(node: List[BstCommand])
+
+sealed trait BstCommand
 
 final case class BstEntry(fields: List[String],
                           integers: List[String],
-                          strings: List[String]) extends BstNode
+                          strings: List[String]) extends BstCommand
 
-final case class BstExecute(name: String) extends BstNode
+final case class BstExecute(name: String) extends BstCommand
 
 final case class BstFunction(name: String,
-                             instructions: List[BstInstruction]) extends BstNode
+                             instructions: List[BstInstruction]) extends BstCommand
 
-final case class BstIntegers(integers: List[String]) extends BstNode
+final case class BstIntegers(integers: List[String]) extends BstCommand
 
-final case class BstIterate(name: String) extends BstNode
+final case class BstIterate(name: String) extends BstCommand
 
-final case class BstMacro(name: String, value: String) extends BstNode
+final case class BstMacro(name: String, value: String) extends BstCommand
 
-case object BstRead extends BstNode
+case object BstRead extends BstCommand
 
-final case class BstReverse(name: String) extends BstNode
+final case class BstReverse(name: String) extends BstCommand
 
-case object BstSort extends BstNode
+case object BstSort extends BstCommand
 
-final case class BstStrings(strings: List[String]) extends BstNode
+final case class BstStrings(strings: List[String]) extends BstCommand
 
 // the different instructions that may occur in a function
 sealed trait BstInstruction

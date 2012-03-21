@@ -5,12 +5,11 @@ package li.publications.bibtex
 package tree
 
 import java.net.URL
-import org.kiama.attribution.Attributable
 
 // the entries
-case class BibTeXDatabase(entries: List[Entry]) extends Attributable
+case class BibTeXDatabase(entries: List[Entry])
 
-sealed abstract class Entry(val key: String) extends Attributable {
+sealed abstract class Entry(val key: String) {
   var extraFields: List[Field] = Nil
   var isCommented = false
   def commented_? = isCommented
@@ -195,7 +194,7 @@ final case class UnknownEntry(name: String,
 }
 
 // a raw entry as returned by the parser before it is refined for later use
-sealed trait Raw extends Attributable
+sealed trait Raw
 
 final case class RawBibTeXDatabase(entries: List[RawEntry]) extends Raw
 

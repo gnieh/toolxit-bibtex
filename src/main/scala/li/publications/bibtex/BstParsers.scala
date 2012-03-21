@@ -18,6 +18,20 @@ object BstParsers extends RegexParsers {
   // extends the whiteSpace value to handle comments
   protected override val whiteSpace = "(\\s|%.*)+".r
 
+  // ==== a .bst file ====
+
+  lazy val bstfile: Parser[BstFile] =
+    rep(entry
+      | execute
+      | function
+      | integers
+      | iterate
+      | macro
+      | read
+      | reverse
+      | sort
+      | strings) ^^ BstFile
+
   // ==== the commands ====
 
   lazy val entry: Parser[BstEntry] = "ENTRY" ~>
@@ -60,7 +74,8 @@ object BstParsers extends RegexParsers {
 
   lazy val instruction: Parser[BstInstruction] = (
     builtin
-    | """'[^\\$&#%_{}\^~\s0-9][^\\$&#%_{}\^~\s]*""".r ^^ (s => BstPushName(s.toLowerCase))
+    | """'[^\\$&#%_{}\^~\s0-9][^\\$&#%_{}\^~\s]*""".r ^^ (s =>
+      BstPushName(s.tail.toLowerCase))
     | name ^^ BstPushValue
     | string ^^ BstPushString
     | "#[0-9]+".r ^^ (i => BstPushInt(i.tail.toInt)))
