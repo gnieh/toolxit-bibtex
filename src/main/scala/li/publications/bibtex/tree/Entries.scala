@@ -8,6 +8,7 @@ import java.net.URL
 import org.kiama.attribution.Attributable
 
 // the entries
+case class BibTeXDatabase(entries: List[Entry]) extends Attributable
 
 sealed abstract class Entry(val key: String) extends Attributable {
   var extraFields: List[Field] = Nil
@@ -194,9 +195,11 @@ final case class UnknownEntry(name: String,
 }
 
 // a raw entry as returned by the parser before it is refined for later use
-final case class BibFile(entries: List[RawEntry]) extends Attributable
+sealed trait Raw extends Attributable
 
-sealed trait RawEntry extends Attributable
+final case class RawBibTeXDatabase(entries: List[RawEntry]) extends Raw
+
+sealed trait RawEntry extends Raw
 
 final case class StringEntry(name: String, value: Value) extends RawEntry
 

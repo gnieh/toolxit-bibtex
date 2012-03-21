@@ -3,10 +3,16 @@
  */
 package li.publications.bibtex
 
+import tree._
+import org.kiama.attribution.Attribution._
+
 /**
+ * This linker allows to transform the raw bibTeX database
+ * and link cross-references
+ *
  * @author Lucas Satabin
  *
  */
-class BibTeXLinker {
+class BibTeXLinker(global: Map[String, String]) {
 
 }

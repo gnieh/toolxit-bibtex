@@ -15,9 +15,9 @@ import scala.util.parsing.combinator.RegexParsers
  */
 object BibTeXParsers extends RegexParsers {
 
-  lazy val bibFile: Parser[List[RawEntry]] = {
+  lazy val bibFile: Parser[RawBibTeXDatabase] = {
     rep(string | preamble | comment ^^^ null | entry)
-  } ^^ (_.filter(_ != null))
+  } ^^ (entries => RawBibTeXDatabase(entries.filter(_ != null)))
 
   lazy val string: Parser[StringEntry] =
     "@" ~> ci("string") ~> "{" ~> (name <~ "=") ~ quoted <~ "}" ^^ {
