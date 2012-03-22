@@ -44,11 +44,11 @@ object BstParsers extends RegexParsers {
     }
 
   lazy val execute: Parser[BstExecute] = "EXECUTE" ~>
-    "{" ~> name <~ "}" ^^ BstExecute
+    "{" ~> refName <~ "}" ^^ BstExecute
 
   lazy val function: Parser[BstFunction] = "FUNCTION" ~>
     ("{" ~> name <~ "}") ~
-    ("{" ~> rep(instruction) <~ "}") ^^ {
+    block ^^ {
       case name ~ instr => BstFunction(name, instr)
     }
 
@@ -56,7 +56,7 @@ object BstParsers extends RegexParsers {
     "{" ~> rep(name) <~ "}" ^^ BstIntegers
 
   lazy val iterate: Parser[BstIterate] = "ITERATE" ~>
-    "{" ~> name <~ "}" ^^ BstIterate
+    "{" ~> refName <~ "}" ^^ BstIterate
 
   lazy val macro: Parser[BstMacro] = "MACRO" ~>
     ("{" ~> name <~ "}") ~
@@ -65,7 +65,7 @@ object BstParsers extends RegexParsers {
   lazy val read: Parser[BstRead.type] = "READ" ^^^ BstRead
 
   lazy val reverse: Parser[BstReverse] = "REVERSE" ~>
-    "{" ~> name <~ "}" ^^ BstReverse
+    "{" ~> refName <~ "}" ^^ BstReverse
 
   lazy val sort: Parser[BstSort.type] = "SORT" ^^^ BstSort
 
@@ -75,12 +75,16 @@ object BstParsers extends RegexParsers {
   // ==== built-in functions and instructions ====
 
   lazy val instruction: Parser[BstInstruction] = (
-    builtin
-    | """'[^\\$&#%_{}\^~\s0-9][^\\$&#%_{}\^~\s]*""".r ^^ (s =>
-      BstPushName(Symbol(s.tail.toLowerCase)))
-    | name ^^ BstPushValue
+    block
+    | builtin
+    | """'[^\\$&#%_{}\^~\s"0-9][^\\$&#%_{}\^~\s"]*\$?""".r ^^ (s =>
+      BstPushName(s.tail.toLowerCase))
+    | refName ^^ BstPushValue
     | string ^^ BstPushString
     | "#[0-9]+".r ^^ (i => BstPushInt(i.tail.toInt)))
+
+  lazy val block: Parser[BstBlock] =
+    "{" ~> rep(instruction) <~ "}" ^^ BstBlock
 
   lazy val builtin: Parser[BstBuiltIn] = (
     "<" ^^^ BstInferior
@@ -126,7 +130,12 @@ object BstParsers extends RegexParsers {
   // any printing character except the ten special LaTeX characters
   // ^$&#%_{}~\
   lazy val name: Parser[String] =
-    """[^\\$&#%_{}\^~\s0-9][^\\$&#%_{}\^~\s]*""".r ^^ (_.toLowerCase)
+    """[^\\$&#%_{}\^~\s"0-9][^\\$&#%_{}\^~\s"]*""".r ^^ (_.toLowerCase)
+
+  // this is pretty much the same as declared names, but is it possible to
+  // reference an automatically declared name which ends with a `$'
+  lazy val refName: Parser[String] =
+    """[^\\$&#%_{}\^~\s"0-9][^\\$&#%_{}\^~\s"]*\$?""".r ^^ (_.toLowerCase)
 
   // a double quoted string
   lazy val string: Parser[String] = "\"" ~> "[^\"]*".r <~ "\""

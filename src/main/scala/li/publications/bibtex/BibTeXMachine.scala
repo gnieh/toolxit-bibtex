@@ -41,9 +41,23 @@ class BibTeXMachine(cites: List[String],
   // field name -> entry name -> value
   private val fields = Map.empty[String, Map[String, Variable]]
   // name -> instructions
-  private val functions = Map.empty[String, List[BstInstruction]]
+  private val functions = Map.empty[String, BstBlock]
   // name -> value
   private val macros = Map.empty[String, String]
+
+  /* searches the name in the environment.
+   *  - first looks for the name in field for current entry
+   *  - if not found, looks for the name in entryVariables
+   *  - if not found, looks for the name in globalVariables */
+  private def env(name: String) = {
+    (currentEntry.value, fields.get(name)) match {
+      case (Some(entry), Some(map)) =>
+        map.get(entry.key) match {
+          case Some(d) =>
+        }
+
+    }
+  }
 
   // the entries in the .bib file, sorted first following citation order
   // the SORT command may change the order of bib entries in this list
@@ -178,7 +192,7 @@ class BibTeXMachine(cites: List[String],
       }
     case BstExecute(fun) =>
       functions.get(fun) match {
-        case Some(instr) => execute(instr)
+        case Some(BstBlock(instr)) => execute(instr)
         case None =>
           throw BibTeXException("Unable to run .bst file",
             List("FUNCTION " + fun + " is not declared before it is called"))
@@ -191,7 +205,7 @@ class BibTeXMachine(cites: List[String],
       }
     case BstIterate(fun) =>
       functions.get(fun) match {
-        case Some(instr) =>
+        case Some(BstBlock(instr)) =>
           // execute the function for each entry in the entry list
           entries.foreach { entry =>
             currentEntry.withValue(Some(entry)) {
@@ -209,7 +223,7 @@ class BibTeXMachine(cites: List[String],
       read
     case BstReverse(fun) =>
       functions.get(fun) match {
-        case Some(instr) =>
+        case Some(BstBlock(instr)) =>
           // execute the function for each entry in the entry list in reverse order
           entries.reverse.foreach { entry =>
             currentEntry.withValue(Some(entry)) {
@@ -232,6 +246,14 @@ class BibTeXMachine(cites: List[String],
   /* executes the instructions of a function */
   private def execute(instructions: List[BstInstruction]): Unit =
     instructions.foreach {
+      case BstPushName(name) =>
+        push(name)
+      case BstPushValue(name) =>
+      // TODO
+      case BstPushInt(i) =>
+        push(i)
+      case BstPushString(s) =>
+        push(s)
       case BstSuperior =>
         (popInt, popInt) match {
           case (Some(first), Some(second)) =>
@@ -287,8 +309,10 @@ class BibTeXMachine(cites: List[String],
             push(second + first)
           case _ =>
             // error, push null string
-            push(NullString)
+            push(NullStringValue)
         }
+      case BstAssign =>
+
     }
 
   /* reads and loads the .bib database */
@@ -311,11 +335,6 @@ class BibTeXMachine(cites: List[String],
   /* pushes a string on the stack */
   private def push(s: String) {
     stack.push(SStringValue(s))
-  }
-
-  /* pushes a symbol on the stack */
-  private def push(s: Symbol) {
-    stack.push(SNameValue(s))
   }
 
   /* pushes a symbol on the stack */
@@ -379,8 +398,7 @@ class BibTeXMachine(cites: List[String],
 // ==== values that are pushed on the stack ====
 sealed trait StackValue
 final case class SStringValue(value: String) extends StackValue
-case object NullString extends StackValue
-final case class SNameValue(value: Symbol) extends StackValue
+case object NullStringValue extends StackValue
 final case class SIntValue(value: Int) extends StackValue
 case object MissingValue extends StackValue
 

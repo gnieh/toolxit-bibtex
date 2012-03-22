@@ -14,7 +14,7 @@ final case class BstEntry(fields: List[String],
 final case class BstExecute(name: String) extends BstCommand
 
 final case class BstFunction(name: String,
-                             instructions: List[BstInstruction]) extends BstCommand
+                             instructions: BstBlock) extends BstCommand
 
 final case class BstIntegers(integers: List[String]) extends BstCommand
 
@@ -32,10 +32,12 @@ final case class BstStrings(strings: List[String]) extends BstCommand
 
 // the different instructions that may occur in a function
 sealed trait BstInstruction
+// a block delimited by braces
+final case class BstBlock(instructions: List[BstInstruction]) extends BstInstruction
 // pushes the value of the given variable on the stack
 final case class BstPushValue(name: String) extends BstInstruction
 // pushes the name of the given variable on the stack
-final case class BstPushName(name: Symbol) extends BstInstruction
+final case class BstPushName(name: String) extends BstInstruction
 // pushes the given string on the stack
 final case class BstPushString(string: String) extends BstInstruction
 // pushes the given integer on the stack
