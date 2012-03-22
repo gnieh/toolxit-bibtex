@@ -6,6 +6,8 @@ package li.publications.bibtex
 import tree._
 import scala.util.parsing.combinator.RegexParsers
 
+// TODO position parsed element to improve error messages
+
 /**
  *
  * A bunch of parsers to parse a .bst file
@@ -75,7 +77,7 @@ object BstParsers extends RegexParsers {
   lazy val instruction: Parser[BstInstruction] = (
     builtin
     | """'[^\\$&#%_{}\^~\s0-9][^\\$&#%_{}\^~\s]*""".r ^^ (s =>
-      BstPushName(s.tail.toLowerCase))
+      BstPushName(Symbol(s.tail.toLowerCase)))
     | name ^^ BstPushValue
     | string ^^ BstPushString
     | "#[0-9]+".r ^^ (i => BstPushInt(i.tail.toInt)))

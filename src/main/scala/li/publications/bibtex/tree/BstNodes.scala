@@ -35,7 +35,7 @@ sealed trait BstInstruction
 // pushes the value of the given variable on the stack
 final case class BstPushValue(name: String) extends BstInstruction
 // pushes the name of the given variable on the stack
-final case class BstPushName(name: String) extends BstInstruction
+final case class BstPushName(name: Symbol) extends BstInstruction
 // pushes the given string on the stack
 final case class BstPushString(string: String) extends BstInstruction
 // pushes the given integer on the stack
