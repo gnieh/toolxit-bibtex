@@ -61,13 +61,29 @@ object Authors {
       }
 
     lazy val lastFirstParts =
-      rep2sep(rep(block | special | "\\w+".r ^^ Word), ",")
+      rep2sep(rep(block | special | "\\w+".r ^^ Word), ",") ^^ {
+        case List(vonLast, jr, first) =>
+          // the lastname part contains at least the last word
+          var lastname = vonLast.last
+          // remaining word, removing at least the last one which is in the lastname part
+          val remaining = vonLast.dropRight(1)
+          val (von, last) = toVonLast(remaining)
+          Author(first.mkString, von, last + lastname, jr.mkString)
+        case List(vonLast, first) =>
+          // the lastname part contains at least the last word
+          var lastname = vonLast.last
+          // remaining word, removing at least the last one which is in the lastname part
+          val remaining = vonLast.dropRight(1)
+          val (von, last) = toVonLast(remaining)
+          Author(first.mkString, von, last + lastname, "")
+        case _ => EmptyAuthor
+      }
 
     lazy val block: Parser[Block] =
       "{" ~> rep("[^\\{}]+".r ^^ Sentence | special | block) <~ "}" ^^ Block
 
     lazy val special: Parser[Special] =
-      "\\" ~> "[^\\s{]+".r ~ opt("{" ~> "[^}]*".r <~ "}") ^^ {
+      "\\" ~> "[^\\s{]+".r ~ opt(rep1("{") ~> "[^}]*".r <~ rep1("}")) ^^ {
         case spec ~ char => Special(spec, char)
       }
 
@@ -103,6 +119,27 @@ object Authors {
     (first, von, last)
   }
 
+  def toVonLast(parts: List[StringElement]) = {
+    var von = ""
+    var last = ""
+    var hasVon = false
+    parts.foreach { part =>
+      if (isFirstCharacterLower(part) && last.nonEmpty) {
+        hasVon = true
+        von = von + " " + last + " " + part
+        last = ""
+      } else if (isFirstCharacterLower(part)) {
+        hasVon = true
+        von = von + " " + part
+      } else {
+        last = last + " " + part
+      }
+    }
+    if (last.nonEmpty)
+      last = last + " "
+    (von, last)
+  }
+
   /* returns the first non brace character at level 0 if any */
   def firstCharacter(str: StringElement): Option[Char] = {
     str match {
@@ -127,18 +164,10 @@ object Authors {
 
   }
 
-  /* indicates whether this string starts with a lower case character at level 0 */
-  def startsWithLowerCase(string: List[StringElement]) =
-    string.find(el => firstCharacter(el).isDefined).isDefined
-
   def toList(authors: String) = {
     authors.split("(?i) and ").map { author =>
 
     }
-  }
-
-  def parts(name: String) = {
-
   }
 
 }
