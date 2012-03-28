@@ -79,7 +79,7 @@ object BstParsers extends RegexParsers {
     | builtin
     | """'[^\\$&#%_{}\^~\s"0-9][^\\$&#%_{}\^~\s"]*\$?""".r ^^ (s =>
       BstPushName(s.tail.toLowerCase))
-    | refName ^^ BstPushValue
+    | refName ^^ BstRefName
     | string ^^ BstPushString
     | "#[0-9]+".r ^^ (i => BstPushInt(i.tail.toInt)))
 

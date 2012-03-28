@@ -6,209 +6,63 @@ package tree
 
 import java.net.URL
 
-// the entries
-case class BibTeXDatabase(entries: List[Entry])
-
-sealed abstract class Entry(val key: String) {
-  var extraFields: List[Field] = Nil
-  var isCommented = false
-  def commented_? = isCommented
-}
-
-final case class Article(override val key: String,
-                         authors: List[Author],
-                         title: Title,
-                         journal: Journal,
-                         year: Year,
-                         volume: Option[Volume],
-                         number: Option[Number],
-                         pages: Option[Pages],
-                         month: Option[Month],
-                         note: Option[Note],
-                         _key: Option[Key]) extends Entry(key)
-
-final case class Book(override val key: String,
-                      author_editor: Either[Author, Editor],
-                      title: Title,
-                      publisher: Publisher,
-                      year: Year,
-                      volume_number: Option[Either[Volume, Number]],
-                      series: Option[Series],
-                      address: Option[Address],
-                      edition: Option[Edition],
-                      month: Option[Month],
-                      note: Option[Note],
-                      _key: Option[Key]) extends Entry(key)
-
-final case class Booklet(override val key: String,
-                         title: Title,
-                         author: Option[Author],
-                         howpublished: Option[HowPublished],
-                         address: Option[Address],
-                         month: Option[Month],
-                         year: Option[Month],
-                         note: Option[Note],
-                         _key: Option[Key]) extends Entry(key)
-
-final case class Conference(override val key: String,
-                            author: Author,
-                            title: Title,
-                            booktitle: BookTitle,
-                            year: Year,
-                            editor: Option[Editor],
-                            volume_number: Option[Either[Volume, Number]],
-                            series: Option[Series],
-                            pages: Option[Pages],
-                            address: Option[Address],
-                            month: Option[Month],
-                            organization: Option[Organization],
-                            publisher: Option[Publisher],
-                            note: Option[Note],
-                            _key: Option[Key]) extends Entry(key)
-
-final case class InBook(override val key: String,
-                        author_editor: Either[Author, Editor],
-                        title: Title,
-                        chapter_pages: Either[Chapter, Pages],
-                        publisher: Publisher,
-                        year: Year,
-                        volume_number: Option[Either[Volume, Number]],
-                        series: Option[Series],
-                        tpe: Option[Type],
-                        address: Option[Address],
-                        edition: Option[Edition],
-                        month: Option[Month],
-                        note: Option[Note],
-                        _key: Option[Key]) extends Entry(key)
-
-final case class InCollection(override val key: String,
-                              author: Author,
-                              title: Title,
-                              booktitle: BookTitle,
-                              publisher: Publisher,
-                              year: Year,
-                              editor: Option[Editor],
-                              volume_number: Option[Either[Volume, Number]],
-                              series: Option[Series],
-                              tpe: Option[Type],
-                              chapter: Option[Chapter],
-                              pages: Option[Pages],
-                              address: Option[Address],
-                              edition: Option[Edition],
-                              month: Option[Month],
-                              note: Option[Note],
-                              _key: Option[Key]) extends Entry(key)
-
-final case class InProceedings(override val key: String,
-                               author: Author,
-                               title: Title,
-                               booktitle: BookTitle,
-                               year: Year,
-                               editor: Option[Editor],
-                               volume_number: Option[Either[Volume, Number]],
-                               series: Option[Series],
-                               pages: Option[Pages],
-                               address: Option[Address],
-                               month: Option[Month],
-                               organization: Option[Organization],
-                               publisher: Option[Publisher],
-                               note: Option[Note],
-                               _key: Option[Key]) extends Entry(key)
-
-final case class Manual(override val key: String,
-                        title: Title,
-                        author: Option[Author],
-                        organization: Option[Organization],
-                        address: Option[Address],
-                        edition: Option[Edition],
-                        month: Option[Month],
-                        year: Option[Year],
-                        note: Option[Note],
-                        _key: Option[Key]) extends Entry(key)
-
-final case class MastersThesis(override val key: String,
-                               author: Author,
-                               title: Title,
-                               school: School,
-                               year: Year,
-                               tpe: Option[Type],
-                               address: Option[Address],
-                               month: Option[Month],
-                               note: Option[Note],
-                               _key: Option[Key]) extends Entry(key)
-
-final case class Misc(override val key: String,
-                      author: Option[Author],
-                      title: Option[Title],
-                      howpublished: Option[HowPublished],
-                      month: Option[Month],
-                      year: Option[Year],
-                      note: Option[Note],
-                      _key: Option[Key]) extends Entry(key)
-
-final case class PhdThesis(override val key: String,
-                           author: Author,
-                           title: Title,
-                           school: School,
-                           year: Year,
-                           tpe: Option[Type],
-                           address: Option[Address],
-                           month: Option[Month],
-                           note: Option[Note],
-                           _key: Option[Key]) extends Entry(key)
-
-final case class Proceedings(override val key: String,
-                             title: Title,
-                             year: Year,
-                             editor: Option[Editor],
-                             volume_number: Option[Either[Volume, Number]],
-                             series: Option[Series],
-                             address: Option[Address],
-                             month: Option[Month],
-                             publisher: Option[Publisher]) extends Entry(key)
-
-final case class TechReport(override val key: String,
-                            author: Author,
-                            title: Title,
-                            institution: Institution,
-                            year: Year,
-                            tpe: Option[Type],
-                            number: Option[Number],
-                            address: Option[Address],
-                            month: Option[Month],
-                            note: Option[Note],
-                            _key: Option[Key]) extends Entry(key)
-
-final case class Unpublished(override val key: String,
-                             author: Author,
-                             title: Title,
-                             note: Note,
-                             month: Option[Month],
-                             year: Option[Year],
-                             _key: Option[Key]) extends Entry(key)
-
-final case class UnknownEntry(name: String,
-                              override val key: String,
-                              fields: List[Field]) extends Entry(key) {
-  extraFields = fields
-}
-
 // a raw entry as returned by the parser before it is refined for later use
 sealed trait Raw
 
-final case class RawBibTeXDatabase(entries: List[RawEntry]) extends Raw
+final case class BibTeXDatabase(entries: List[Entry]) extends Raw
 
-sealed trait RawEntry extends Raw
+sealed trait Entry extends Raw
 
-final case class StringEntry(name: String, value: Value) extends RawEntry
+final case class StringEntry(name: String, value: Value) extends Entry
 
-sealed trait Value
-final case class StringValue(value: String) extends Value
-final case class ConcatValue(parts: List[Value]) extends Value
-final case class NameValue(name: String) extends Value
+sealed trait Value extends Ordered[Value]
+final case class StringValue(value: String) extends Value {
+  def compare(that: Value) = that match {
+    case StringValue(s) => value.compare(s)
+    case c: ConcatValue =>
+      value.compare(c.resolved)
+    case _ => 1
+  }
+}
+final case class IntValue(value: Int) extends Value {
+  def compare(that: Value) = that match {
+    case IntValue(i) => value.compare(i)
+    case EmptyValue => 1
+    case _ => -1
+  }
+}
+final case class ConcatValue(parts: List[Value]) extends Value {
+  var resolved = ""
+  def compare(that: Value) = that match {
+    case StringValue(s) => resolved.compare(s)
+    case c: ConcatValue =>
+      resolved.compare(c.resolved)
+    case _ => 1
+  }
+}
+final case class NameValue(name: String) extends Value {
+  var resolved = ""
+  def compare(that: Value) = that match {
+    case StringValue(s) => resolved.compare(s)
+    case c: ConcatValue =>
+      resolved.compare(c.resolved)
+    case _ => 1
+  }
+}
+case object EmptyValue extends Value {
+  def compare(that: Value) = that match {
+    case EmptyValue => 0
+    case _ => -1
+  }
+}
 
-final case class PreambleEntry(value: Value) extends RawEntry
+final case class PreambleEntry(value: ConcatValue) extends Entry
 
 final case class BibEntry(name: String,
                           key: String,
-                          fields: List[Field]) extends RawEntry
+                          fields: List[Field]) extends Entry {
+  var sortKey = key
+
+  def sortValue = fields.find(_.name == sortKey).map(_.value).getOrElse(EmptyValue)
+
+}

@@ -34,10 +34,12 @@ final case class BstStrings(strings: List[String]) extends BstCommand
 sealed trait BstInstruction
 // a block delimited by braces
 final case class BstBlock(instructions: List[BstInstruction]) extends BstInstruction
-// pushes the value of the given variable on the stack
-final case class BstPushValue(name: String) extends BstInstruction
 // pushes the name of the given variable on the stack
 final case class BstPushName(name: String) extends BstInstruction
+// references a name
+//  - if it is a variable or macro, its value will be pushed on stack
+//  - if it is a function name, the function is called
+final case class BstRefName(name: String) extends BstInstruction
 // pushes the given string on the stack
 final case class BstPushString(string: String) extends BstInstruction
 // pushes the given integer on the stack

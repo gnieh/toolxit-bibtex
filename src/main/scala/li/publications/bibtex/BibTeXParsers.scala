@@ -15,9 +15,9 @@ import scala.util.parsing.combinator.RegexParsers
  */
 object BibTeXParsers extends RegexParsers {
 
-  lazy val bibFile: Parser[RawBibTeXDatabase] = {
+  lazy val bibFile: Parser[BibTeXDatabase] = {
     rep(string | preamble | comment ^^^ null | entry)
-  } ^^ (entries => RawBibTeXDatabase(entries.filter(_ != null)))
+  } ^^ (entries => BibTeXDatabase(entries.filter(_ != null)))
 
   lazy val string: Parser[StringEntry] =
     "@" ~> ci("string") ~> "{" ~> (name <~ "=") ~ quoted <~ "}" ^^ {
@@ -36,18 +36,20 @@ object BibTeXParsers extends RegexParsers {
     }
 
   lazy val field: Parser[Field] =
-    (name <~ "=") ~ value ^^ { case n ~ v => RawField(n, v) }
+    (name <~ "=") ~ value ^^ {
+      case n ~ v => Field(n, v)
+    }
 
   lazy val name: Parser[String] =
     "[^=\\s,{']+".r ^^ (_.toLowerCase)
 
-  lazy val number: Parser[Int] = {
+  lazy val number: Parser[IntValue] = {
     "[0-9]+".r |
       "{" ~> "[0-9]+".r <~ "}" |
       "\"" ~> "[0-9]+".r <~ "\""
-  } ^^ (_.toInt)
+  } ^^ (s => IntValue(s.toInt))
 
-  lazy val value: Parser[Value] = braced | concat | "[^\\s,]+".r ^^ StringValue
+  lazy val value: Parser[Value] = number | braced | concat | "[^\\s,]+".r ^^ StringValue
 
   lazy val someText = rep1("""[^\\}{"]""".r | escaped) ^^ (_.mkString(""))
 
@@ -55,10 +57,10 @@ object BibTeXParsers extends RegexParsers {
 
   lazy val concatanable: Parser[Value] = quoted | name ^^ NameValue
 
-  lazy val concat: Parser[Value] =
+  lazy val concat: Parser[ConcatValue] =
     concatanable ~ opt("#" ~> repsep(concatanable, "#")) ^^ {
       case first ~ Some(next) => ConcatValue(first :: next)
-      case first ~ None => first
+      case first ~ None => ConcatValue(List(first))
     }
 
   lazy val quoted: Parser[StringValue] =
@@ -83,7 +85,7 @@ object BibTeXParsers extends RegexParsers {
       StringValue(list.map(_.value).mkString(start, "", end))
     }
 
-  lazy val escaped: Parser[String] = "\\" ~> "[\"{}]".r
+  lazy val escaped: Parser[String] = "\\" ~> "[\\\"{}]".r
 
   // Helper methods
   private def ci(p: String): Parser[String] = ("(?i)" + p).r
