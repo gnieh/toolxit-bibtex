@@ -5,7 +5,7 @@ package li.publications.bibtex
 
 import tree._
 import scala.util.DynamicVariable
-import scala.collection.mutable.{ Map, Stack, ListBuffer }
+import scala.collection.mutable.{ Map, Stack, ListBuffer, StringBuilder }
 import java.io.{ Reader, Writer }
 
 case class BibTeXException(msg: String, errors: List[String]) extends Exception(msg)
@@ -46,6 +46,9 @@ class BibTeXMachine(auxReader: Reader,
   private val macros = Map.empty[String, MacroVariable]
   // value
   private val preambles = ListBuffer.empty[String]
+
+  // the output buffer
+  private val buffer = new StringBuilder
 
   /* searches the name in the environment.
    *  - first looks for the name in fields for current entry (if any)
@@ -493,6 +496,86 @@ class BibTeXMachine(auxReader: Reader,
             push(0)
         }
       case BstCite =>
+        currentEntry.value match {
+          case Some(entry) =>
+            push(entry.key)
+          case None =>
+          // TODO error
+        }
+      case BstDuplicate =>
+        pop match {
+          case Some(v) =>
+            push(v)
+            push(v)
+          case None => // TODO Error
+        }
+      case BstEmpty =>
+        pop match {
+          case Some(MissingValue | NullStringValue) =>
+            push(1)
+          case Some(SStringValue(s)) if s.matches("\\s*") =>
+            push(1)
+          case _ => push(0)
+        }
+      case BstFormatName =>
+        (popString, popInt, popString) match {
+          case (Some(pattern), Some(authorNb), Some(authorList)) =>
+            val list = Authors.toList(authorList)
+            if (list.size > authorNb) {
+              push(Authors.format(pattern, list(authorNb)))
+            } else {
+              // wrong format, push null string
+              push(NullStringValue)
+            }
+          case _ =>
+            // error, push null string value
+            push(NullStringValue)
+        }
+      case BstIf =>
+        (popFunction, popFunction, popInt) match {
+          case (Some(elseFun), Some(thenFun), Some(cond)) =>
+            if (cond > 0)
+              execute(thenFun)
+            else
+              execute(elseFun)
+          case _ => // do nothing
+        }
+      case BstIntToChr =>
+        popInt match {
+          case Some(char) =>
+            push(char.toChar.toString)
+          case _ => //error, push null string
+            push(NullStringValue)
+        }
+      case BstIntToStr =>
+        popInt match {
+          case Some(char) =>
+            push(char.toString)
+          case _ => //error, push null string
+            push(NullStringValue)
+        }
+      case BstMissing =>
+        pop match {
+          case Some(MissingValue) => push(1)
+          case _ => push(0)
+        }
+      case BstNewline =>
+        if (buffer.isEmpty) {
+          output.write("\n")
+        } else {
+          // flush the buffer to the file
+          output.write(buffer.toString)
+          output.flush
+          // empty the buffer
+          buffer.clear
+        }
+      case BstNumNames =>
+        popString match {
+          case Some(names) =>
+            push(Authors.toList(names).size)
+          case _ => // error, push 0
+            push(0)
+        }
     }
 
   /* reads and loads the .bib database */
@@ -603,6 +686,18 @@ class BibTeXMachine(auxReader: Reader,
       }
   }
 
+  /* pops a function from the stack. If the value is not a 
+   * function or does not exist, None is returned */
+  private def popFunction = {
+    if (stack.isEmpty)
+      None
+    else
+      stack.pop match {
+        case FunctionValue(instr) => Some(instr)
+        case _ => None
+      }
+  }
+
   /* pops a value from the stack. If the stack is empty returns None */
   private def pop = {
     if (stack.isEmpty)
@@ -659,6 +754,9 @@ case object NullStringValue extends StackValue {
 }
 final case class SIntValue(value: Int) extends StackValue {
   def toVar = IntVariable(value)
+}
+final case class FunctionValue(instructions: BstBlock) extends StackValue {
+  def toVar = FunctionVariable(instructions)
 }
 case object MissingValue extends StackValue {
   def toVar = StringVariable()

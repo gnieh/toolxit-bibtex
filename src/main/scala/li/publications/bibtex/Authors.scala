@@ -22,26 +22,6 @@ object Authors {
         c.isLower
   }
 
-  sealed trait StringElement
-  final case class Block(parts: List[StringElement]) extends StringElement {
-    override def toString = parts.mkString("{", "", "}")
-  }
-  final case class Word(value: String) extends StringElement {
-    override def toString = value
-  }
-  final case class Sentence(value: String) extends StringElement {
-    override def toString = value
-  }
-  final case class Special(spec: String, char: Option[String]) extends StringElement {
-    override def toString = {
-      val block = char match {
-        case Some(c) => "{" + c + "}"
-        case _ => ""
-      }
-      "\\" + spec + block
-    }
-  }
-
   object NameParser extends RegexParsers {
 
     lazy val author = lastFirstParts | firstLastParts
@@ -92,6 +72,28 @@ object Authors {
 
   }
 
+  object NamesParser extends RegexParsers {
+    override def skipWhitespace = false
+
+    lazy val nameSep = """(?i)\s+and\s+""".r
+
+    lazy val names =
+      rep1sep(uptoNameSep, nameSep)
+
+    lazy val uptoNameSep =
+      guard(nameSep) ~> "" ^^^ Word("") |
+        rep1(block | special | not(nameSep) ~> ".".r) ^^ (list => Sentence(list.mkString))
+
+    lazy val block: Parser[Block] =
+      "{" ~> rep("[^\\{}]+".r ^^ Sentence | special | block) <~ "}" ^^ Block
+
+    lazy val special: Parser[Special] =
+      "\\" ~> "[^\\s{]+".r ~ opt(rep1("{") ~> "[^}]*".r <~ rep1("}")) ^^ {
+        case spec ~ char => Special(spec, char)
+      }
+
+  }
+
   def toFirstVonLast(parts: List[StringElement]) = {
     var first = ""
     var von = ""
@@ -102,12 +104,20 @@ object Authors {
       if (isFirstCharacterLower(part) && last.nonEmpty) {
         hasVon = true
         isFirst = false
-        von = von + " " + last + " " + part
+        von =
+          if (von.nonEmpty)
+            von + " " + last + " " + part
+          else
+            last + " " + part
         last = ""
       } else if (isFirstCharacterLower(part)) {
         hasVon = true
         isFirst = false
-        von = von + " " + part
+        von =
+          if (von.nonEmpty)
+            von + " " + part
+          else
+            part.toString
       } else if (isFirst) {
         first = first + " " + part
       } else {
@@ -126,11 +136,19 @@ object Authors {
     parts.foreach { part =>
       if (isFirstCharacterLower(part) && last.nonEmpty) {
         hasVon = true
-        von = von + " " + last + " " + part
+        von =
+          if (von.nonEmpty)
+            von + " " + last + " " + part
+          else
+            last + " " + part
         last = ""
       } else if (isFirstCharacterLower(part)) {
         hasVon = true
-        von = von + " " + part
+        von =
+          if (von.nonEmpty)
+            von + " " + part
+          else
+            part.toString
       } else {
         last = last + " " + part
       }
@@ -160,13 +178,18 @@ object Authors {
   def isFirstCharacterLower(str: StringElement) =
     firstCharacter(str).map(_.isBibTeXLower).getOrElse(false)
 
-  def format(pattern: String, authors: String) = {
-
+  def format(pattern: String, author: Author) = {
+    // TODO implement
+    ""
   }
 
   def toList(authors: String) = {
     authors.split("(?i) and ").map { author =>
-
+      NameParser.parseAll(NameParser.author, author).getOrElse {
+        println("Wrong author format: " + author)
+        println("This author is omitted")
+        EmptyAuthor
+      }
     }
   }
 
