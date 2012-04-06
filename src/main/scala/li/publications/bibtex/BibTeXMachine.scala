@@ -576,6 +576,35 @@ class BibTeXMachine(auxReader: Reader,
           case _ => // error, push 0
             push(0)
         }
+      case BstPop =>
+        // pop literal if any
+        pop
+      case BstPreamble =>
+        push(preambles.mkString)
+      case BstPurify =>
+        popString match {
+          case Some(str) =>
+            push(purify(str))
+          case _ =>
+            // error, push the null string
+            push(NullStringValue)
+        }
+      case BstQuote =>
+        push("\"")
+      case BstSkip =>
+      // no-op
+      case BstStack =>
+        println(stack.mkString("\n")) // TODO improve stack formatting
+        stack.clear
+      case BstSubstring =>
+        (popString, popInt, popInt) match {
+          case (Some(string), Some(length), Some(start)) =>
+            // first character is at position one in BibTeX
+            push(string.substring(start - 1, length))
+          case _ =>
+            // error, push null string
+            push(NullStringValue)
+        }
     }
 
   /* reads and loads the .bib database */
@@ -641,6 +670,11 @@ class BibTeXMachine(auxReader: Reader,
   }
 
   private def toUpper(s: String) = {
+    // TODO
+    s
+  }
+
+  private def purify(s: String) = {
     // TODO
     s
   }

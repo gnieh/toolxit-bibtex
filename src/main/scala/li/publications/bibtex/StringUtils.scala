@@ -12,7 +12,6 @@ import scala.util.parsing.combinator.RegexParsers
 object StringUtils {
 
   implicit def char2testable(c: Char) = new {
-    def isAlphaNumeric = c.toString.matches("[a-zA-Z0-9]")
     def isBibTeXLower =
       if (c.isDigit)
         true

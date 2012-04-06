@@ -78,7 +78,7 @@ object Authors {
     lazy val nameSep = """(?i)\s+and\s+""".r
 
     lazy val names =
-      rep1sep(uptoNameSep, nameSep)
+      rep1sep(uptoNameSep, nameSep) ^^ (_.map(_.toString))
 
     lazy val uptoNameSep =
       guard(nameSep) ~> "" ^^^ Word("") |
@@ -169,8 +169,8 @@ object Authors {
         firstCharacter(b)
       case Special(spec, _) if spec(0).isAlphaNumeric =>
         Some(spec(0))
-      case Special(_, Some(char)) if char.nonEmpty && char(0).isAlphaNumeric =>
-        Some(char(0))
+      case Special(_, Some(char)) =>
+        char.find(_.isAlphaNumeric)
       case _ => None
     }
   }
@@ -184,7 +184,7 @@ object Authors {
   }
 
   def toList(authors: String) = {
-    authors.split("(?i) and ").map { author =>
+    NamesParser.parseAll(NamesParser.names, authors).getOrElse(Nil).map { author =>
       NameParser.parseAll(NameParser.author, author).getOrElse {
         println("Wrong author format: " + author)
         println("This author is omitted")
