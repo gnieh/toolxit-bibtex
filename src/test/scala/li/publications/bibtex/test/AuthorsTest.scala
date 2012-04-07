@@ -79,4 +79,15 @@ class AuthorsTest extends FlatSpec with ShouldMatchers {
     (parseAuthor("Victor, Paul {\\'e}mile").get) should equal(Author("Paul {\\'e}mile", "", "Victor", ""))
   }
 
+  it should "correctly recognize the first level 0 letter in First von Last format" in {
+    (parseAuthor("Dominique Galouzeau de Villepin").get) should equal(Author("Dominique Galouzeau", "de", "Villepin", ""))
+    (parseAuthor("Dominique {G}alouzeau de Villepin").get) should equal(Author("Dominique", "{G}alouzeau de", "Villepin", ""))
+    "Galouzeau de Villepin, Dominique"
+  }
+
+  it should "correctly recognize the first level 0 letter in von Last, Jr, First format" in {
+    (parseAuthor("Galouzeau de Villepin, Dominique").get) should equal(Author("Dominique", "", "Galouzeau de Villepin", ""))
+    (parseAuthor("{G}alouzeau de Villepin, Dominique").get) should equal(Author("Dominique", "{G}alouzeau de", "Villepin", ""))
+  }
+
 }
