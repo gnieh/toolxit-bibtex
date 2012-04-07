@@ -146,26 +146,29 @@ object AuthorNameExtractor extends RegexParsers {
   def toVonLast(parts: List[Word]) = {
     var von = ""
     var last = ""
-    var hasVon = false
+    var first = true
+    var hasVon = true
     parts.foreach { part =>
-      if (isFirstCharacterLower(part) && last.nonEmpty) {
-        hasVon = true
+      if (isFirstCharacterLower(part) && hasVon && last.nonEmpty) {
+
         von =
           if (von.nonEmpty)
             von.trim + " " + last.trim + " " + part.toString.trim
           else
             last.trim + " " + part.toString.trim
         last = ""
-      } else if (isFirstCharacterLower(part)) {
-        hasVon = true
+      } else if (isFirstCharacterLower(part) && hasVon) {
         von =
           if (von.nonEmpty)
             von.trim + " " + part.toString.trim
           else
             part.toString.trim
       } else {
+        if (first)
+          hasVon = false
         last = last.trim + " " + part.toString.trim
       }
+      first = false
     }
     if (last.nonEmpty)
       last = last + " "
