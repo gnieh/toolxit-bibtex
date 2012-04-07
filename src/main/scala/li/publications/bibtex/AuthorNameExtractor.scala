@@ -23,25 +23,26 @@ object AuthorNameExtractor extends RegexParsers {
 
   sealed trait PseudoLetter
   final case class CharacterLetter(char: Char) extends PseudoLetter {
-    //    override def toString = char.toString
+    override def toString = char.toString
   }
   final case class BlockLetter(parts: List[PseudoLetter]) extends PseudoLetter {
-    //    override def toString = parts.mkString("{", "", "}")
+    override def toString = parts.mkString("{", "", "}")
   }
-  final case class SpecialLetter(command: String, arg: Option[String]) extends PseudoLetter {
-    //    override def toString = {
-    //      val argument = arg match {
-    //        case Some(a) => "{" + a + "}"
-    //        case None => ""
-    //      }
-    //      "\\" + command + argument
-    //    }
+  final case class SpecialLetter(command: String, arg: Option[String], withBraces: Boolean) extends PseudoLetter {
+    override def toString = {
+      val argument = arg match {
+        case Some(a) if withBraces => "{" + a + "}"
+        case Some(a) => a
+        case None => ""
+      }
+      "{\\" + command + argument + "}"
+    }
   }
   final case class Word(letters: List[PseudoLetter]) {
-    //    override def toString = letters.mkString
+    override def toString = letters.mkString
   }
   final case class Sentence(words: List[Word]) {
-    //    override def toString = words.mkString(" ")
+    override def toString = words.mkString(" ")
   }
 
   override def skipWhitespace = false
@@ -66,21 +67,21 @@ object AuthorNameExtractor extends RegexParsers {
   lazy val lastFirstParts =
     rep2sep(
       repsep(word, "\\s+".r),
-      ",\\s*?".r) ^^ {
+      ",\\s*".r) ^^ {
         case List(vonLast, jr, first) =>
           // the lastname part contains at least the last word
           var lastname = vonLast.last
           // remaining word, removing at least the last one which is in the lastname part
           val remaining = vonLast.dropRight(1)
           val (von, last) = toVonLast(remaining)
-          Author(first.mkString, von, last + lastname, jr.mkString)
+          Author(first.mkString(" "), von, last + lastname, jr.mkString(" "))
         case List(vonLast, first) =>
           // the lastname part contains at least the last word
           var lastname = vonLast.last
           // remaining word, removing at least the last one which is in the lastname part
           val remaining = vonLast.dropRight(1)
           val (von, last) = toVonLast(remaining)
-          Author(first.mkString, von, last + lastname, "")
+          Author(first.mkString(" "), von, last + lastname, "")
         case _ => EmptyAuthor
       }
 
@@ -89,7 +90,7 @@ object AuthorNameExtractor extends RegexParsers {
   lazy val pseudoLetter: Parser[PseudoLetter] = special | block | character
 
   lazy val character: Parser[CharacterLetter] =
-    "[^\\{}\\s]".r ^^ (s => CharacterLetter(s.charAt(0)))
+    "[^\\{}\\s,]".r ^^ (s => CharacterLetter(s.charAt(0)))
 
   lazy val block: Parser[BlockLetter] =
     "{" ~>
@@ -98,9 +99,10 @@ object AuthorNameExtractor extends RegexParsers {
 
   lazy val special: Parser[SpecialLetter] =
     "{\\" ~> "'|\"|[^\\s{]+".r ~
-      opt(rep1("{") ~> "[^}\\s]*".r <~ rep1("}")
-        | ("[^}\\s]".r)) <~ "}" ^^ {
-        case spec ~ char => SpecialLetter(spec, char)
+      opt(rep1("{") ~> ("[^}\\s]*".r ^^ (s => (true, s))) <~ rep1("}")
+        | ("[^}\\s]".r ^^ (s => (false, s)))) <~ "}" ^^ {
+        case spec ~ Some((braces, char)) => SpecialLetter(spec, Some(char), braces)
+        case spec ~ None => SpecialLetter(spec, None, false)
       }
 
   def rep2sep[T, U](p: => Parser[T], s: => Parser[U]) =
@@ -118,22 +120,22 @@ object AuthorNameExtractor extends RegexParsers {
         isFirst = false
         von =
           if (von.nonEmpty)
-            von + " " + last + " " + part
+            von.trim + " " + last.trim + " " + part.toString.trim
           else
-            last + " " + part
+            last.trim + " " + part.toString.trim
         last = ""
       } else if (isFirstCharacterLower(part)) {
         hasVon = true
         isFirst = false
         von =
           if (von.nonEmpty)
-            von + " " + part
+            von.trim + " " + part.toString.trim
           else
-            part.toString
+            part.toString.trim
       } else if (isFirst) {
-        first = first + " " + part
+        first = first.trim + " " + part.toString.trim
       } else {
-        last = last + " " + part
+        last = last.trim + " " + part.toString.trim
       }
     }
     if (last.nonEmpty)
@@ -150,19 +152,19 @@ object AuthorNameExtractor extends RegexParsers {
         hasVon = true
         von =
           if (von.nonEmpty)
-            von + " " + last + " " + part
+            von.trim + " " + last.trim + " " + part.toString.trim
           else
-            last + " " + part
+            last.trim + " " + part.toString.trim
         last = ""
       } else if (isFirstCharacterLower(part)) {
         hasVon = true
         von =
           if (von.nonEmpty)
-            von + " " + part
+            von.trim + " " + part.toString.trim
           else
-            part.toString
+            part.toString.trim
       } else {
-        last = last + " " + part
+        last = last.trim + " " + part.toString.trim
       }
     }
     if (last.nonEmpty)
@@ -176,11 +178,11 @@ object AuthorNameExtractor extends RegexParsers {
     def findFirst(letters: List[PseudoLetter]): Option[Char] = letters match {
       case (_: BlockLetter) :: tail =>
         findFirst(tail)
-      case SpecialLetter(spec, _) :: _ if spec.charAt(0).isAlphaNumeric =>
-        Some(spec.charAt(0))
-      case SpecialLetter(_, Some(char)) :: _ =>
+      case SpecialLetter(spec, _, _) :: _ if spec.contains((c: Char) => c.isLetter) =>
+        spec.find(_.isLetter)
+      case SpecialLetter(_, Some(char), _) :: _ =>
         char.find(_.isAlphaNumeric)
-      case CharacterLetter(c) :: _ if c.isAlphaNumeric =>
+      case CharacterLetter(c) :: _ if c.isLetter =>
         Some(c)
       case _ :: tail =>
         findFirst(tail)
