@@ -520,9 +520,9 @@ class BibTeXMachine(auxReader: Reader,
       case BstFormatName =>
         (popString, popInt, popString) match {
           case (Some(pattern), Some(authorNb), Some(authorList)) =>
-            val list = Authors.toList(authorList)
+            val list = AuthorNamesExtractor.toList(authorList)
             if (list.size > authorNb) {
-              push(Authors.format(pattern, list(authorNb)))
+              push(AuthorNameExtractor.format(pattern, list(authorNb)))
             } else {
               // wrong format, push null string
               push(NullStringValue)
@@ -572,7 +572,7 @@ class BibTeXMachine(auxReader: Reader,
       case BstNumNames =>
         popString match {
           case Some(names) =>
-            push(Authors.toList(names).size)
+            push(AuthorNamesExtractor.toList(names).size)
           case _ => // error, push 0
             push(0)
         }
