@@ -1,7 +1,7 @@
 /* This file is part of blue.publications.li
  * © Copyright Martin Monperrus, Lucas Satabin. All rights reserved.
  */
-package li.publications.bibtex
+package toolxit.bibtex
 
 import tree._
 import scala.util.parsing.combinator.RegexParsers

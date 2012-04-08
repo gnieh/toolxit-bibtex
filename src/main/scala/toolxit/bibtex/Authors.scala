@@ -1,7 +1,7 @@
 /* This file is part of blue.publications.li
  * © Copyright Martin Monperrus, Lucas Satabin. All rights reserved.
  */
-package li.publications.bibtex
+package toolxit.bibtex
 
 class Author(val firstname: Option[String],
              val von: Option[String],
