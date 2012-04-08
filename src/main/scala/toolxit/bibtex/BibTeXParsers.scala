@@ -31,7 +31,7 @@ object BibTeXParsers extends RegexParsers {
   protected override val whiteSpace = "(\\s|%.*)+".r
 
   lazy val bibFile: Parser[BibTeXDatabase] = {
-    rep(string | preamble | comment ^^^ null | entry)
+    rep(positioned(string | preamble | comment ^^^ null | entry))
   } ^^ (entries => BibTeXDatabase(entries.filter(_ != null)))
 
   lazy val string: Parser[StringEntry] =
@@ -46,7 +46,7 @@ object BibTeXParsers extends RegexParsers {
     ci("@comment") ~> "{" ~> concat <~ "}" ^^^ ()
 
   lazy val entry: Parser[BibEntry] =
-    ("@" ~> name <~ "{") ~ (name <~ ",") ~ repsep(field, ",") <~ opt(",") <~ "}" ^^ {
+    ("@" ~> name <~ "{") ~ (name <~ ",") ~ repsep(positioned(field), ",") <~ opt(",") <~ "}" ^^ {
       case name ~ key ~ fields => BibEntry(name.toLowerCase, key, fields)
     }
 

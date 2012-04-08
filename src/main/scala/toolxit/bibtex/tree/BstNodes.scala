@@ -15,9 +15,11 @@
 */
 package toolxit.bibtex.tree
 
+import scala.util.parsing.input.Positional
+
 final case class BstFile(node: List[BstCommand])
 
-sealed trait BstCommand
+sealed trait BstCommand extends Positional
 
 final case class BstEntry(fields: List[String],
                           integers: List[String],
@@ -43,7 +45,7 @@ case object BstSort extends BstCommand
 final case class BstStrings(strings: List[String]) extends BstCommand
 
 // the different instructions that may occur in a function
-sealed trait BstInstruction
+sealed trait BstInstruction extends Positional
 // a block delimited by braces
 final case class BstBlock(instructions: List[BstInstruction]) extends BstInstruction
 // pushes the name of the given variable on the stack

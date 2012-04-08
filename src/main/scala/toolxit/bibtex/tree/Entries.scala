@@ -17,9 +17,10 @@ package toolxit.bibtex
 package tree
 
 import java.net.URL
+import scala.util.parsing.input.Positional
 
 // a raw entry as returned by the parser before it is refined for later use
-sealed trait Raw
+sealed trait Raw extends Positional
 
 final case class BibTeXDatabase(entries: List[Entry]) extends Raw
 

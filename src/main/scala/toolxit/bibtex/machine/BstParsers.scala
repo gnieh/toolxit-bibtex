@@ -19,8 +19,6 @@ package machine
 import tree._
 import scala.util.parsing.combinator.RegexParsers
 
-// TODO position parsed element to improve error messages
-
 /**
  *
  * A bunch of parsers to parse a .bst file
@@ -36,16 +34,17 @@ object BstParsers extends RegexParsers {
   // ==== a .bst file ====
 
   lazy val bstfile: Parser[BstFile] =
-    rep(entry
-      | execute
-      | function
-      | integers
-      | iterate
-      | macro
-      | read
-      | reverse
-      | sort
-      | strings) ^^ BstFile
+    rep(
+      positioned(entry
+        | execute
+        | function
+        | integers
+        | iterate
+        | macro
+        | read
+        | reverse
+        | sort
+        | strings)) ^^ BstFile
 
   // ==== the commands ====
 
@@ -97,7 +96,7 @@ object BstParsers extends RegexParsers {
     | "#-?[0-9]+".r ^^ (i => BstPushInt(i.tail.toInt)))
 
   lazy val block: Parser[BstBlock] =
-    "{" ~> rep(instruction) <~ "}" ^^ BstBlock
+    "{" ~> rep(positioned(instruction)) <~ "}" ^^ BstBlock
 
   lazy val builtin: Parser[BstBuiltIn] = (
     "<" ^^^ BstInferior

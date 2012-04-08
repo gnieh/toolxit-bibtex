@@ -16,6 +16,6 @@
 package toolxit.bibtex
 package tree
 
-import java.net.URL
+import scala.util.parsing.input.Positional
 
-final case class Field(val name: String, val value: Value)
+final case class Field(val name: String, val value: Value) extends Positional
