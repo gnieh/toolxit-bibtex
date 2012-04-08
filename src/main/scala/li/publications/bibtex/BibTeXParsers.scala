@@ -8,27 +8,30 @@ import scala.util.parsing.combinator.RegexParsers
 
 /**
  *
- * A collection of parsers to parse bibtex files.
+ * A collection of parsers to parse BibTeX files.
  *
  * @author Lucas Satabin
  *
  */
 object BibTeXParsers extends RegexParsers {
 
+  // extends the whiteSpace value to handle comments
+  protected override val whiteSpace = "(\\s|%.*)+".r
+
   lazy val bibFile: Parser[BibTeXDatabase] = {
     rep(string | preamble | comment ^^^ null | entry)
   } ^^ (entries => BibTeXDatabase(entries.filter(_ != null)))
 
   lazy val string: Parser[StringEntry] =
-    "@" ~> ci("string") ~> "{" ~> (name <~ "=") ~ quoted <~ "}" ^^ {
+    ci("@string") ~> "{" ~> (name <~ "=") ~ quoted <~ "}" ^^ {
       case name ~ value => StringEntry(name, value)
     }
 
   lazy val preamble: Parser[PreambleEntry] =
-    "@" ~> ci("preamble") ~> "{" ~> concat <~ "}" ^^ PreambleEntry
+    ci("@preamble") ~> "{" ~> concat <~ "}" ^^ PreambleEntry
 
   lazy val comment: Parser[Unit] =
-    "@" ~> ci("comment") ~> "{" ~> concat <~ "}" ^^^ ()
+    ci("@comment") ~> "{" ~> concat <~ "}" ^^^ ()
 
   lazy val entry: Parser[BibEntry] =
     ("@" ~> name <~ "{") ~ (name <~ ",") ~ repsep(field, ",") <~ opt(",") <~ "}" ^^ {

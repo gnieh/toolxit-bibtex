@@ -23,6 +23,8 @@ final case class StringValue(value: String) extends Value {
       value.compare(c.resolved)
     case _ => 1
   }
+
+  override def toString = "\"" + value + "\""
 }
 final case class IntValue(value: Int) extends Value {
   def compare(that: Value) = that match {
@@ -30,6 +32,8 @@ final case class IntValue(value: Int) extends Value {
     case EmptyValue => 1
     case _ => -1
   }
+
+  override def toString = value.toString
 }
 final case class ConcatValue(parts: List[Value]) extends Value {
   var resolved = ""
@@ -39,6 +43,8 @@ final case class ConcatValue(parts: List[Value]) extends Value {
       resolved.compare(c.resolved)
     case _ => 1
   }
+
+  override def toString = parts.mkString(" # ")
 }
 final case class NameValue(name: String) extends Value {
   var resolved = ""
@@ -48,12 +54,16 @@ final case class NameValue(name: String) extends Value {
       resolved.compare(c.resolved)
     case _ => 1
   }
+
+  override def toString = name
 }
 case object EmptyValue extends Value {
   def compare(that: Value) = that match {
     case EmptyValue => 0
     case _ => -1
   }
+
+  override def toString = ""
 }
 
 final case class PreambleEntry(value: ConcatValue) extends Entry

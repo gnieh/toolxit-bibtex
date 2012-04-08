@@ -2,6 +2,7 @@
  * © Copyright Martin Monperrus, Lucas Satabin. All rights reserved.
  */
 package li.publications.bibtex
+package machine
 
 import java.io.Reader
 import collection.mutable.ListBuffer

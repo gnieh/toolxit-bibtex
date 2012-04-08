@@ -2,6 +2,7 @@
  * © Copyright Martin Monperrus, Lucas Satabin. All rights reserved.
  */
 package li.publications.bibtex
+package machine
 
 import tree._
 import scala.util.parsing.combinator.RegexParsers
@@ -81,7 +82,7 @@ object BstParsers extends RegexParsers {
       BstPushName(s.tail.toLowerCase))
     | refName ^^ BstRefName
     | string ^^ BstPushString
-    | "#[0-9]+".r ^^ (i => BstPushInt(i.tail.toInt)))
+    | "#-?[0-9]+".r ^^ (i => BstPushInt(i.tail.toInt)))
 
   lazy val block: Parser[BstBlock] =
     "{" ~> rep(instruction) <~ "}" ^^ BstBlock
