@@ -1,6 +1,18 @@
-/* This file is part of blue.publications.li
- * © Copyright Martin Monperrus, Lucas Satabin. All rights reserved.
- */
+/*
+* This file is part of the ToolXiT project.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package toolxit.bibtex
 package test
 
@@ -12,23 +24,10 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class AuthorsTest extends FlatSpec with ShouldMatchers {
 
-  lazy val parseBlock = (input: String) =>
-    AuthorNameExtractor.parseAll(AuthorNameExtractor.block, input)
-
-  lazy val parseAuthor = (input: String) =>
+  def parseAuthor(input: String) =
     AuthorNameExtractor.parseAll(AuthorNameExtractor.author, input)
 
-  "The parser" should "correctly detect blocks and reject invalid blocks" in {
-    // ok
-    (parseBlock("{toto}").successful) should equal(true)
-    (parseBlock("{toto toto}").successful) should equal(true)
-    (parseBlock("{toto {toto}}").successful) should equal(true)
-    (parseBlock("{{toto} {{\\toto}}}").successful) should equal(true)
-    // nok
-    (parseBlock("{{toto} {{\\toto}}").successful) should equal(false)
-  }
-
-  it should "correctly parse author names, and split the different parts in First von Last format" in {
+  "The parser" should "correctly parse author names, and split the different parts in First von Last format" in {
 
     // first von last form
     (parseAuthor("AA BB").get) should equal(Author("AA", "", "BB", ""))
