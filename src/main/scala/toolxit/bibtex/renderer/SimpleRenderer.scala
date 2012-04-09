@@ -41,4 +41,14 @@ class SimpleRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
           }.mkString("\n\n")
     }.mkString("\n\n")
   }
+
+  protected[this] def render(entry: BibEntry) = entry match {
+    case BibEntry(name, key, fields) =>
+      "==== " + name + " (" + key + ") ====\n" +
+        fields.map {
+          case Field(fname, fvalue) =>
+            "  " + fname + ": " + fvalue
+        }.mkString("\n")
+  }
+
 }

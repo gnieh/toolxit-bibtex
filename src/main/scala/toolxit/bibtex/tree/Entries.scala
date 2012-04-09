@@ -22,7 +22,17 @@ import scala.util.parsing.input.Positional
 // a raw entry as returned by the parser before it is refined for later use
 sealed trait Raw extends Positional
 
-final case class BibTeXDatabase(entries: List[Entry]) extends Raw
+final case class BibTeXDatabase(entries: List[BibEntry],
+                                strings: List[StringEntry],
+                                preambles: List[PreambleEntry]) extends Raw {
+
+  /** Finds the BibTeX entry associated to the key, if any */
+  def find(key: String) = entries.find {
+    case BibEntry(_, k, _) if k == key => true
+    case _ => false
+  }
+
+}
 
 sealed trait Entry extends Raw
 

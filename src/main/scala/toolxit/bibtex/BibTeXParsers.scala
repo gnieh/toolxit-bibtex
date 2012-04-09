@@ -32,7 +32,16 @@ object BibTeXParsers extends RegexParsers {
 
   lazy val bibFile: Parser[BibTeXDatabase] = {
     rep(positioned(string | preamble | comment ^^^ null | entry))
-  } ^^ (entries => BibTeXDatabase(entries.filter(_ != null)))
+  } ^^ { entries =>
+    val grouped = entries.filter(_ != null).groupBy {
+      case _: BibEntry => "bib"
+      case _: StringEntry => "string"
+      case _: PreambleEntry => "preamble"
+    }
+    BibTeXDatabase(grouped.getOrElse("bib", Nil).map(_.asInstanceOf[BibEntry]),
+      grouped.getOrElse("string", Nil).map(_.asInstanceOf[StringEntry]),
+      grouped.getOrElse("preamble", Nil).map(_.asInstanceOf[PreambleEntry]))
+  }
 
   lazy val string: Parser[StringEntry] =
     ci("@string") ~> "{" ~> (name <~ "=") ~ quoted <~ "}" ^^ {

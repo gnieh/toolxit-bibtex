@@ -17,7 +17,7 @@ package toolxit.bibtex
 package renderer
 
 import tree._
-import scala.collection.mutable.{ HashMap, MultiMap, Set }
+import scala.collection.mutable.{ HashMap, MultiMap, LinkedHashSet }
 
 /**
  * A BibTeX renderer allows the user to output a BibTeX database in
@@ -53,6 +53,12 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrin
    * Implementors must only implement this method
    */
   protected[this] def render(groups: List[(String, List[BibEntry])]): Rendered
+
+  /** Renders the entry identified by the key. If entry is not found, returns None */
+  def render(key: String): Option[Rendered] = db.find(key).map(render _)
+
+  /** Renders the given single entry */
+  protected[this] def render(entry: BibEntry): Rendered
 
   /** Clears the cached value */
   def clearCache = _cached = None
@@ -99,10 +105,28 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrin
   private[this] def groups: List[(String, List[BibEntry])] = {
 
     val groups =
-      new HashMap[String, Set[BibEntry]] with MultiMap[String, BibEntry]
+      new HashMap[String, LinkedHashSet[BibEntry]] {
+        def addBinding(key: String, value: BibEntry): this.type = {
+          get(key) match {
+            case None =>
+              val set = new LinkedHashSet[BibEntry]
+              set += value
+              this(key) = set
+            case Some(set) =>
+              set += value
+          }
+          this
+        }
+      }
     var env = defaultStrings.toMap
 
     val filter = _filter.getOrElse(TrueFilter)
+
+    // enrich environment with user defined strings
+    db.strings.foreach {
+      case StringEntry(name, value) =>
+        env += (name -> value.resolve(env))
+    }
 
     // create the groups of entries
     (_groupByField, _groupByType) match {
@@ -112,8 +136,6 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrin
             // if the entry matches the filter, add it
             val group = entry.field(name).getOrElse(EmptyValue)
             groups.addBinding(group.resolve(env), entry)
-          case StringEntry(name, value) =>
-            env += (name -> value.resolve(env))
           case _ => // do nothing
         }
       case (None, true) =>
@@ -121,8 +143,6 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrin
           case entry: BibEntry if filter.matches_?(entry) =>
             // if the entry matches the filter, add it
             groups.addBinding(entry.name, entry)
-          case StringEntry(name, value) =>
-            env += (name -> value.resolve(env))
           case _ => // do nothing
         }
       case _ =>
@@ -130,8 +150,6 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrin
           case entry: BibEntry if filter.matches_?(entry) =>
             // if the entry matches the filter, add it
             groups.addBinding("Entries", entry)
-          case StringEntry(name, value) =>
-            env += (name -> value.resolve(env))
           case _ => // do nothing
         }
     }

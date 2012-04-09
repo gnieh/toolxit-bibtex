@@ -623,13 +623,13 @@ class BibTeXMachine(auxReader: Reader,
   /* reads and loads the .bib database */
   private def read {
     (auxfile, bibfile) match {
-      case (Some(AuxFile(_, citations)), Some(BibTeXDatabase(entries))) =>
+      case (Some(AuxFile(_, citations)), Some(BibTeXDatabase(entries, strings, pre))) =>
 
         // read all the found entries and enrich the environment with 
         // strings and preambles, and build the map of declared entries
         // in the database
         val bibEntries = Map.empty[String, BibEntry]
-        entries.foreach {
+        strings.foreach {
           case StringEntry(name, StringValue(value)) =>
             macros(name) = MacroVariable(value)
           case StringEntry(name, concat @ ConcatValue(values)) =>
@@ -638,11 +638,15 @@ class BibTeXMachine(auxReader: Reader,
             concat.resolved = Some(resolved)
             // set in the environment
             macros(name) = MacroVariable(resolved)
+          case _ => // should never happen, ignore it
+        }
+        pre.foreach {
           case PreambleEntry(ConcatValue(values)) =>
             preambles += resolve(values)
+        }
+        entries.foreach {
           case b: BibEntry =>
             bibEntries(b.key) = b
-          case _ => // should not happen, just ignore
         }
 
         def buildEntryList(keys: List[String]): List[BibEntry] = keys match {
