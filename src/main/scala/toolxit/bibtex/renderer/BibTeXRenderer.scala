@@ -16,7 +16,8 @@
 package toolxit.bibtex
 package renderer
 
-import tree.BibTeXDatabase
+import tree._
+import scala.collection.mutable.{ HashMap, MultiMap, Set }
 
 /**
  * A BibTeX renderer allows the user to output a BibTeX database in
@@ -25,9 +26,140 @@ import tree.BibTeXDatabase
  * @author Lucas Satabin
  *
  */
-trait BibTeXRenderer[Rendered] {
+abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrings: Map[String, String]) {
 
-  /** Takes a BibTeX database and returns its rendered string representation */
-  def render(db: BibTeXDatabase): Rendered
+  private[this] var _groupByField: Option[String] = None
+  private[this] var _groupByType = false
+  private[this] var _filter: Option[Filter] = None
+  private[this] var _sortBy: Option[String] = None
+
+  private[this] var _cached: Option[Rendered] = None
+
+  /**
+   * Takes a BibTeX database and returns its rendered string representation.
+   * The result is cached for more efficiency if it is called again.
+   */
+  def render: Rendered = _cached match {
+    case Some(cached) =>
+      cached
+    case _ =>
+      val res = render(groups)
+      _cached = Some(res)
+      res
+  }
+
+  /**
+   * Renders the entries filter, sorted and grouped.
+   * Implementors must only implement this method
+   */
+  protected[this] def render(groups: List[(String, List[BibEntry])]): Rendered
+
+  /** Clears the cached value */
+  def clearCache = _cached = None
+
+  /**
+   * The renderer will group entries by the given field.
+   * If the field does not exist for an entry, the renderer implementation may decide
+   * under which category to group this entry.
+   * This method returns this renderer object to allow the user to chain calls.
+   */
+  def groupByField(fieldName: String): this.type = modify {
+    _groupByField = Option(fieldName)
+  }
+
+  /**
+   * The renderer will group entries by entry type.
+   * This method returns this renderer object to allow the user to chain calls.
+   */
+  def groupByType: this.type = modify {
+    _groupByType = true
+  }
+
+  /**
+   * The renderer will only render entries matching the given filter.
+   * This method returns this renderer object to allow the user to chain calls.
+   */
+  def filter(filter: Filter): this.type = modify {
+    _filter = Option(filter)
+  }
+
+  /**
+   * The renderer will sort entries by the given field.
+   * If the field does not exist for an entry, the entry comes after all other. These
+   * entries are sorted by key.
+   * This method returns this renderer object to allow the user to chain calls.
+   */
+  def sortBy(fieldName: String): this.type = modify {
+    _sortBy = Option(fieldName)
+  }
+
+  // ==== helper methods ====
+
+  /* buld the group list, filtered and sorted */
+  private[this] def groups: List[(String, List[BibEntry])] = {
+
+    val groups =
+      new HashMap[String, Set[BibEntry]] with MultiMap[String, BibEntry]
+    var env = defaultStrings.toMap
+
+    val filter = _filter.getOrElse(TrueFilter)
+
+    // create the groups of entries
+    (_groupByField, _groupByType) match {
+      case (Some(name), false) =>
+        db.entries.foreach {
+          case entry: BibEntry if filter.matches_?(entry) =>
+            // if the entry matches the filter, add it
+            val group = entry.field(name).getOrElse(EmptyValue)
+            groups.addBinding(group.resolve(env), entry)
+          case StringEntry(name, value) =>
+            env += (name -> value.resolve(env))
+          case _ => // do nothing
+        }
+      case (None, true) =>
+        db.entries.foreach {
+          case entry: BibEntry if filter.matches_?(entry) =>
+            // if the entry matches the filter, add it
+            groups.addBinding(entry.name, entry)
+          case StringEntry(name, value) =>
+            env += (name -> value.resolve(env))
+          case _ => // do nothing
+        }
+      case _ =>
+        db.entries.foreach {
+          case entry: BibEntry if filter.matches_?(entry) =>
+            // if the entry matches the filter, add it
+            groups.addBinding("Entries", entry)
+          case StringEntry(name, value) =>
+            env += (name -> value.resolve(env))
+          case _ => // do nothing
+        }
+    }
+
+    // sort elements for each group if sort field is defined
+    val result = scala.collection.mutable.Map.empty[String, List[BibEntry]]
+    _sortBy match {
+      case Some(field) =>
+        groups.keys.foreach { key =>
+          result(key) = groups(key).toList.sortBy(_.field(field).getOrElse(EmptyValue))
+        }
+      case None =>
+        groups.keys.foreach { key =>
+          result(key) = groups(key).toList
+        }
+    }
+
+    result.toList.sortBy(_._1)
+  }
+
+  /* The given block modifies this renderer, thus, invalidating the cache */
+  private[this] def modify(block: => Any): this.type = {
+    try {
+      block
+    } finally {
+      _cached = None
+    }
+    this
+  }
 
 }

@@ -24,17 +24,21 @@ import tree._
  * @author Lucas Satabin
  *
  */
-object SimpleRenderer extends BibTeXRenderer[String] {
+class SimpleRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
+    extends BibTeXRenderer[String](db, defaultStrings) {
 
-  def render(db: BibTeXDatabase) =
-    db.entries.map {
-      case BibEntry(name, key, fields) =>
-        "==== " + name + " (" + key + ") ====\n" +
-          fields.map {
-            case Field(fname, fvalue) =>
-              "  " + fname + ": " + fvalue
-          }.mkString("\n")
-      case _ => // do nothing
+  protected[this] def render(groups: List[(String, List[BibEntry])]) = {
+    groups.map {
+      case (key, entries) =>
+        "====== " + key + " ======\n\n" +
+          entries.map {
+            case BibEntry(name, key, fields) =>
+              "==== " + name + " (" + key + ") ====\n" +
+                fields.map {
+                  case Field(fname, fvalue) =>
+                    "  " + fname + ": " + fvalue
+                }.mkString("\n")
+          }.mkString("\n\n")
     }.mkString("\n\n")
-
+  }
 }

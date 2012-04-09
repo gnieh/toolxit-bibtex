@@ -635,7 +635,7 @@ class BibTeXMachine(auxReader: Reader,
           case StringEntry(name, concat @ ConcatValue(values)) =>
             // resolve the values
             val resolved = resolve(values)
-            concat.resolved = resolved
+            concat.resolved = Some(resolved)
             // set in the environment
             macros(name) = MacroVariable(resolved)
           case PreambleEntry(ConcatValue(values)) =>

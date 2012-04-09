@@ -28,14 +28,19 @@ sealed trait Entry extends Raw
 
 final case class StringEntry(name: String, value: Value) extends Entry
 
-sealed trait Value extends Ordered[Value]
+sealed trait Value extends Ordered[Value] {
+  /** Returns a resolved value if it uses names */
+  def resolve(env: Map[String, String]): String
+}
 final case class StringValue(value: String) extends Value {
   def compare(that: Value) = that match {
     case StringValue(s) => value.compare(s)
     case c: ConcatValue =>
-      value.compare(c.resolved)
+      value.compare(c.resolved.getOrElse(""))
     case _ => 1
   }
+
+  def resolve(env: Map[String, String]) = value
 
   override def toString = "\"" + value + "\""
 }
@@ -46,26 +51,40 @@ final case class IntValue(value: Int) extends Value {
     case _ => -1
   }
 
+  def resolve(env: Map[String, String]) = value.toString
+
   override def toString = value.toString
 }
 final case class ConcatValue(parts: List[Value]) extends Value {
-  var resolved = ""
+  var resolved: Option[String] = None
   def compare(that: Value) = that match {
-    case StringValue(s) => resolved.compare(s)
+    case StringValue(s) => resolved.getOrElse("").compare(s)
     case c: ConcatValue =>
-      resolved.compare(c.resolved)
+      resolved.getOrElse("").compare(c.resolved.getOrElse(""))
     case _ => 1
+  }
+
+  def resolve(env: Map[String, String]) = {
+    if (resolved.isEmpty)
+      resolved = Some(parts.map(_.resolve(env)).mkString)
+    resolved.getOrElse("")
   }
 
   override def toString = parts.mkString(" # ")
 }
 final case class NameValue(name: String) extends Value {
-  var resolved = ""
+  var resolved: Option[String] = None
   def compare(that: Value) = that match {
-    case StringValue(s) => resolved.compare(s)
+    case StringValue(s) => resolved.getOrElse("").compare(s)
     case c: ConcatValue =>
-      resolved.compare(c.resolved)
+      resolved.getOrElse("").compare(c.resolved.getOrElse(""))
     case _ => 1
+  }
+
+  def resolve(env: Map[String, String]) = {
+    if (resolved.isEmpty)
+      resolved = Some(env.getOrElse(name, ""))
+    resolved.getOrElse("")
   }
 
   override def toString = name
@@ -75,6 +94,8 @@ case object EmptyValue extends Value {
     case EmptyValue => 0
     case _ => -1
   }
+
+  def resolve(env: Map[String, String]) = ""
 
   override def toString = ""
 }
@@ -87,5 +108,8 @@ final case class BibEntry(name: String,
   var sortKey = key
 
   def sortValue = fields.find(_.name == sortKey).map(_.value).getOrElse(EmptyValue)
+
+  def field(name: String): Option[Value] =
+    fields.find(_.name == name).map(_.value)
 
 }
