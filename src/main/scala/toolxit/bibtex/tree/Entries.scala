@@ -80,7 +80,10 @@ final case class ConcatValue(parts: List[Value]) extends Value {
     resolved.getOrElse("")
   }
 
-  override def toString = parts.mkString(" # ")
+  override def toString = resolved match {
+    case Some(r) => r
+    case _ => parts.mkString(" # ")
+  }
 }
 final case class NameValue(name: String) extends Value {
   var resolved: Option[String] = None
@@ -93,11 +96,14 @@ final case class NameValue(name: String) extends Value {
 
   def resolve(env: Map[String, String]) = {
     if (resolved.isEmpty)
-      resolved = Some(env.getOrElse(name, ""))
+      resolved = env.get(name)
     resolved.getOrElse("")
   }
 
-  override def toString = name
+  override def toString = resolved match {
+    case Some(r) => r
+    case _ => name
+  }
 }
 case object EmptyValue extends Value {
   def compare(that: Value) = that match {
@@ -121,5 +127,8 @@ final case class BibEntry(name: String,
 
   def field(name: String): Option[Value] =
     fields.find(_.name == name).map(_.value)
+
+  def toBibTeX = "@" + name + " {" + key + ",\n" +
+    fields.map(_.toBibTeX).mkString("  ", "\n  ", "\n}")
 
 }

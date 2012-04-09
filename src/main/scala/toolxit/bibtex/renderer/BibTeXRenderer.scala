@@ -58,7 +58,68 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrin
   def render(key: String): Option[Rendered] = db.find(key).map(render _)
 
   /** Renders the given single entry */
-  protected[this] def render(entry: BibEntry): Rendered
+  protected[this] def render(entry: BibEntry): Rendered = entry.name match {
+    case "article" => renderArticle(entry)
+    case "book" => renderBook(entry)
+    case "booklet" => renderBooklet(entry)
+    case "conference" => renderConference(entry)
+    case "inbook" => renderInBook(entry)
+    case "incollection" => renderInCollection(entry)
+    case "inproceedings" => renderInProceedings(entry)
+    case "manual" => renderManual(entry)
+    case "masterthesis" => renderMasterThesis(entry)
+    case "misc" => renderMisc(entry)
+    case "phdthesis" => renderPhdThesis(entry)
+    case "proceedings" => renderProceedings(entry)
+    case "techreport" => renderTechReport(entry)
+    case "unpublished" => renderUnpublished(entry)
+    case _ => renderUnknown(entry)
+  }
+
+  /** Renders an article */
+  def renderArticle(entry: BibEntry): Rendered
+
+  /** Renders a book */
+  def renderBook(entry: BibEntry): Rendered
+
+  /** Renders a booklet */
+  def renderBooklet(entry: BibEntry): Rendered
+
+  /** Renders a conference */
+  def renderConference(entry: BibEntry): Rendered
+
+  /** Renders an inbook */
+  def renderInBook(entry: BibEntry): Rendered
+
+  /** Renders an incollection */
+  def renderInCollection(entry: BibEntry): Rendered
+
+  /** Renders an inproceedings */
+  def renderInProceedings(entry: BibEntry): Rendered
+
+  /** Renders a manual */
+  def renderManual(entry: BibEntry): Rendered
+
+  /** Renders a masterthesis */
+  def renderMasterThesis(entry: BibEntry): Rendered
+
+  /** Renders a misc */
+  def renderMisc(entry: BibEntry): Rendered
+
+  /** Renders a phdthesis */
+  def renderPhdThesis(entry: BibEntry): Rendered
+
+  /** Renders a proceedings */
+  def renderProceedings(entry: BibEntry): Rendered
+
+  /** Renders a techreport */
+  def renderTechReport(entry: BibEntry): Rendered
+
+  /** Renders a unpublished */
+  def renderUnpublished(entry: BibEntry): Rendered
+
+  /** Renders an unknown */
+  def renderUnknown(entry: BibEntry): Rendered
 
   /** Clears the cached value */
   def clearCache = _cached = None

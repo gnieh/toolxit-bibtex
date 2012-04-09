@@ -18,4 +18,6 @@ package tree
 
 import scala.util.parsing.input.Positional
 
-final case class Field(val name: String, val value: Value) extends Positional
+final case class Field(val name: String, val value: Value) extends Positional {
+  def toBibTeX = name + "=" + value
+}
