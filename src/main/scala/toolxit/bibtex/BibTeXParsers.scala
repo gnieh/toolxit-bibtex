@@ -55,7 +55,7 @@ object BibTeXParsers extends RegexParsers {
     ci("@comment") ~> "{" ~> concat <~ "}" ^^^ ()
 
   lazy val entry: Parser[BibEntry] =
-    ("@" ~> name <~ "{") ~ (name <~ ",") ~ repsep(positioned(field), ",") <~ opt(",") <~ "}" ^^ {
+    ("@" ~> name <~ "{") ~ (key <~ ",") ~ repsep(positioned(field), ",") <~ opt(",") <~ "}" ^^ {
       case name ~ key ~ fields => BibEntry(name.toLowerCase, key, fields)
     }
 
@@ -66,6 +66,9 @@ object BibTeXParsers extends RegexParsers {
 
   lazy val name: Parser[String] =
     "[^=\\s,{']+".r ^^ (_.toLowerCase)
+
+  lazy val key: Parser[String] =
+    "[^=\\s,{']+".r
 
   lazy val number: Parser[IntValue] = {
     "[0-9]+".r |
