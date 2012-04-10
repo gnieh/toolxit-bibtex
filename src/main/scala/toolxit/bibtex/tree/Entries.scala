@@ -41,6 +41,8 @@ final case class StringEntry(name: String, value: Value) extends Entry
 sealed trait Value extends Ordered[Value] {
   /** Returns a resolved value if it uses names */
   def resolve(env: Map[String, String]): String
+  /** Returns a BibTeX representation of this value */
+  def toBibTeX: String
 }
 final case class StringValue(value: String) extends Value {
   def compare(that: Value) = that match {
@@ -52,7 +54,8 @@ final case class StringValue(value: String) extends Value {
 
   def resolve(env: Map[String, String]) = value
 
-  override def toString = "\"" + value + "\""
+  override def toString = value
+  override def toBibTeX = "{" + value + "}"
 }
 final case class IntValue(value: Int) extends Value {
   def compare(that: Value) = that match {
@@ -64,6 +67,7 @@ final case class IntValue(value: Int) extends Value {
   def resolve(env: Map[String, String]) = value.toString
 
   override def toString = value.toString
+  override def toBibTeX = value.toString
 }
 final case class ConcatValue(parts: List[Value]) extends Value {
   var resolved: Option[String] = None
@@ -78,6 +82,11 @@ final case class ConcatValue(parts: List[Value]) extends Value {
     if (resolved.isEmpty)
       resolved = Some(parts.map(_.resolve(env)).mkString)
     resolved.getOrElse("")
+  }
+
+  override def toBibTeX = resolved match {
+    case Some(r) => "{" + r + "}"
+    case _ => parts.map(_.toBibTeX).mkString(" # ")
   }
 
   override def toString = resolved match {
@@ -104,6 +113,12 @@ final case class NameValue(name: String) extends Value {
     case Some(r) => r
     case _ => name
   }
+
+  override def toBibTeX = resolved match {
+    case Some(r) => "{" + r + "}"
+    case _ => name
+  }
+
 }
 case object EmptyValue extends Value {
   def compare(that: Value) = that match {
@@ -113,6 +128,7 @@ case object EmptyValue extends Value {
 
   def resolve(env: Map[String, String]) = ""
 
+  override def toBibTeX = "{}"
   override def toString = ""
 }
 

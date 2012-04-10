@@ -29,6 +29,7 @@ import scala.collection.mutable.{ HashMap, MultiMap, LinkedHashSet }
 abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrings: Map[String, String]) {
 
   private[this] var _groupByField: Option[String] = None
+  private[this] var _groupDirection: Direction = Ascending
   private[this] var _groupByType = false
   private[this] var _filter: Option[Filter] = None
   private[this] var _sortBy: Option[String] = None
@@ -130,16 +131,19 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrin
    * under which category to group this entry.
    * This method returns this renderer object to allow the user to chain calls.
    */
-  def groupByField(fieldName: String): this.type = modify {
+  def groupByField(fieldName: String,
+                   direction: Direction = Ascending): this.type = modify {
     _groupByField = Option(fieldName)
+    _groupDirection = direction
   }
 
   /**
    * The renderer will group entries by entry type.
    * This method returns this renderer object to allow the user to chain calls.
    */
-  def groupByType: this.type = modify {
+  def groupByType(direction: Direction = Ascending): this.type = modify {
     _groupByType = true
+    _groupDirection = direction
   }
 
   /**
@@ -228,7 +232,14 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrin
         }
     }
 
-    result.toList.sortBy(_._1)
+    result.toList.sortWith { (first, second) =>
+      _groupDirection match {
+        case Ascending =>
+          first._1 <= second._1
+        case Descending =>
+          first._1 >= second._1
+      }
+    }
   }
 
   /* The given block modifies this renderer, thus, invalidating the cache */
