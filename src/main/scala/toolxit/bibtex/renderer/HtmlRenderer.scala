@@ -37,8 +37,6 @@ import scala.xml._
  * .bibpublisher { /* nothing by default */ }
  * /* a group */
  * .group { /* nothing by default */ }
- * /* the box containing the bib source */
- * .bibsource { border-style: solid; border-width: 1px; border-color: #000000; background-color: #d8d8d8; }
  *
  *
  * .title {
@@ -128,10 +126,6 @@ import scala.xml._
  * background: none repeat scroll 0 0 #F5F5F5;
  * padding:10px;
  * }
- * .bibentry-by { font-style: italic; }
- * .bibentry-abstract { margin:15px; }
- * .bibentry-label { margin-top:15px; }
- * .bibentry-reference { margin-bottom:15px; padding:10px; background: none repeat scroll 0 0 #F5F5F5; border: 1px solid #DDDDDD; }
  * </pre>
  *
  * @author Lucas Satabin
@@ -171,7 +165,6 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
 /* publisher */
 .bibpublisher { /* nothing by default */ }
 .group { /* nothing by default */ }
-.bibsource { border-style: solid; border-width: 1px; border-color: #000000; background-color: #d8d8d8; }
 
 .title {
   color: #003366;
@@ -260,10 +253,7 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
   background: none repeat scroll 0 0 #F5F5F5;  
   padding:10px;
 }
-.bibentry-by { font-style: italic; }
-.bibentry-abstract { margin:15px; }
-.bibentry-label { margin-top:15px; }
-.bibentry-reference { margin-bottom:15px; padding:10px; background: none repeat scroll 0 0 #F5F5F5; border: 1px solid #DDDDDD; }"""
+"""
 
   /** Renders an article */
   def renderArticle(entry: BibEntry) =
@@ -520,9 +510,7 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
                               </span>
             case _ => Text("")
           },
-          <div id={ "bib:" + key } class="bibsource" style="display:none">
-            <pre>{ bib }</pre>
-          </div>))
+          <div id={ "bib:" + key } class="purebibtex" style="display:none">{ bib }</div>))
       }))
 
 }
