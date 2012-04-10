@@ -269,7 +269,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       entry.field("journal"),
       entry.field("publisher"),
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders a book */
   def renderBook(entry: BibEntry) =
@@ -278,7 +280,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       entry.field("edition"),
       entry.field("publisher"),
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders a booklet */
   def renderBooklet(entry: BibEntry) =
@@ -287,7 +291,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       None,
       None,
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders a conference */
   def renderConference(entry: BibEntry) =
@@ -296,7 +302,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       entry.field("booktitle"),
       entry.field("publisher"),
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders an inbook */
   def renderInBook(entry: BibEntry) =
@@ -305,7 +313,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       entry.field("title"),
       entry.field("publisher"),
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders an incollection */
   def renderInCollection(entry: BibEntry) =
@@ -314,7 +324,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       entry.field("booktitle"),
       entry.field("publisher"),
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders an inproceedings */
   def renderInProceedings(entry: BibEntry) =
@@ -323,7 +335,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       entry.field("booktitle"),
       entry.field("publisher"),
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders a manual */
   def renderManual(entry: BibEntry) =
@@ -332,7 +346,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       None,
       None,
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders a masterthesis */
   def renderMasterThesis(entry: BibEntry) =
@@ -341,7 +357,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       None,
       entry.field("school"),
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders a misc */
   def renderMisc(entry: BibEntry) =
@@ -350,7 +368,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       None,
       None,
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders a phdthesis */
   def renderPhdThesis(entry: BibEntry) =
@@ -359,7 +379,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       None,
       entry.field("school"),
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders a proceedings */
   def renderProceedings(entry: BibEntry) =
@@ -368,7 +390,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       None,
       entry.field("publisher"),
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders a techreport */
   def renderTechReport(entry: BibEntry) =
@@ -377,7 +401,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       None,
       entry.field("institution"),
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders a unpublished */
   def renderUnpublished(entry: BibEntry) =
@@ -386,7 +412,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       None,
       None,
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   /** Renders an unknown */
   def renderUnknown(entry: BibEntry) =
@@ -395,7 +423,9 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
       entry.field("booktitle").orElse(entry.field("journal")),
       entry.field("publisher").orElse(entry.field("school")),
       entry.field("year"),
-      entry.field("comment"))
+      entry.field("comment"),
+      entry.field("url"),
+      entry.field("doi"))
 
   // ====== Helper Methods ======
 
@@ -404,35 +434,42 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
                           booktitle: Option[Value],
                           publisher: Option[Value],
                           year: Option[Value],
-                          comment: Option[Value]) =
+                          comment: Option[Value],
+                          url: Option[Value],
+                          doi: Option[Value]) =
     <span>
-      <span class="bibtitle">{ title }</span>
+      <span class="bibtitle">{
+        url match {
+          case Some(url) =>
+            <a href={ url.toString }>{ title }</a>
+          case _ => title
+        }
+      }</span>
       <span class="bibauthor">{ "(" + author + ")" }</span>
       {
-        booktitle match {
-          case Some(booktitle) =>
-            <span class="bibbooktitle">{ booktitle }</span>
-          case _ => ""
-        }
-      }
-      {
-        publisher match {
-          case Some(publisher) =>
-            <span class="bibpublisher">{ publisher }</span>
-          case _ => ""
-        }
-      }
-      {
-        year match {
-          case Some(year) => ", " + year + "."
-          case _ => "."
-        }
-      }
-      {
-        comment match {
-          case Some(comment) => " (" + comment + ")"
-          case _ => ""
-        }
+        List(
+          booktitle match {
+            case Some(booktitle) =>
+              <span class="bibbooktitle">{ ", In " + booktitle }</span>
+            case _ => ""
+          },
+          publisher match {
+            case Some(publisher) =>
+              <span class="bibpublisher">{ ", " + publisher }</span>
+            case _ => ""
+          },
+          year match {
+            case Some(year) => ", " + year + "."
+            case _ => "."
+          },
+          comment match {
+            case Some(comment) => " (" + comment + ")"
+            case _ => ""
+          },
+          doi match {
+            case Some(doi) => <span> <a href={ "http://dx.doi.org/" + doi }>[doi]</a></span>
+            case _ => ""
+          })
       }
     </span>
 
