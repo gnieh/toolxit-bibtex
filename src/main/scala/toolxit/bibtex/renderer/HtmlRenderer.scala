@@ -37,6 +37,8 @@ import scala.xml._
  * .bibpublisher { /* nothing by default */ }
  * /* a group */
  * .group { /* nothing by default */ }
+ * /* the box containing the bib source */
+ * .bibsource { border-style: solid; border-width: 1px; border-color: #000000; background-color: #d8d8d8; }
  *
  *
  * .title {
@@ -169,6 +171,7 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
 /* publisher */
 .bibpublisher { /* nothing by default */ }
 .group { /* nothing by default */ }
+.bibsource { border-style: solid; border-width: 1px; border-color: #000000; background-color: #d8d8d8; }
 
 .title {
   color: #003366;
@@ -264,179 +267,211 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
 
   /** Renders an article */
   def renderArticle(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").getOrElse(noAuthor),
       entry.field("journal"),
       entry.field("publisher"),
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders a book */
   def renderBook(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").orElse(entry.field("editor")).getOrElse(noAuthor),
       entry.field("edition"),
       entry.field("publisher"),
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders a booklet */
   def renderBooklet(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").orElse(entry.field("editor")).getOrElse(noAuthor),
       None,
       None,
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders a conference */
   def renderConference(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").getOrElse(noAuthor),
       entry.field("booktitle"),
       entry.field("publisher"),
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders an inbook */
   def renderInBook(entry: BibEntry) =
-    renderEntry(entry.field("chapter").orElse(entry.field("pages")).getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("chapter").orElse(entry.field("pages")).getOrElse(noTitle),
       entry.field("author").orElse(entry.field("editor")).getOrElse(noAuthor),
       entry.field("title"),
       entry.field("publisher"),
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders an incollection */
   def renderInCollection(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").getOrElse(noAuthor),
       entry.field("booktitle"),
       entry.field("publisher"),
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders an inproceedings */
   def renderInProceedings(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").getOrElse(noAuthor),
       entry.field("booktitle"),
       entry.field("publisher"),
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders a manual */
   def renderManual(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").getOrElse(noAuthor),
       None,
       None,
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders a masterthesis */
   def renderMasterThesis(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").getOrElse(noAuthor),
       None,
       entry.field("school"),
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders a misc */
   def renderMisc(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").getOrElse(noAuthor),
       None,
       None,
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders a phdthesis */
   def renderPhdThesis(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").getOrElse(noAuthor),
       None,
       entry.field("school"),
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders a proceedings */
   def renderProceedings(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("editor").getOrElse(noAuthor),
       None,
       entry.field("publisher"),
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders a techreport */
   def renderTechReport(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").getOrElse(noAuthor),
       None,
       entry.field("institution"),
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders a unpublished */
   def renderUnpublished(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").getOrElse(noAuthor),
       None,
       None,
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   /** Renders an unknown */
   def renderUnknown(entry: BibEntry) =
-    renderEntry(entry.field("title").getOrElse(noTitle),
+    renderEntry(entry.key,
+      entry.field("title").getOrElse(noTitle),
       entry.field("author").orElse(entry.field("editor")).getOrElse(noAuthor),
       entry.field("booktitle").orElse(entry.field("journal")),
       entry.field("publisher").orElse(entry.field("school")),
       entry.field("year"),
       entry.field("comment"),
       entry.field("url"),
-      entry.field("doi"))
+      entry.field("doi"),
+      entry.toBibTeX)
 
   // ====== Helper Methods ======
 
-  private def renderEntry(title: Value,
+  private def renderEntry(key: String,
+                          title: Value,
                           author: Value,
                           booktitle: Option[Value],
                           publisher: Option[Value],
                           year: Option[Value],
                           comment: Option[Value],
                           url: Option[Value],
-                          doi: Option[Value]) =
+                          doi: Option[Value],
+                          bib: String) =
     Group(List(
       <span class="bibtitle">{
         url match {
@@ -466,10 +501,28 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
             case Some(comment) => Text(" (" + comment + ")")
             case _ => Text("")
           },
+          <span>
+            &nbsp;
+            <a href="javascript:void(0)" onclick={
+              "if(document.getElementById('bib:" +
+                key +
+                "').style.display == 'none'){ document.getElementById('bib:" +
+                key +
+                "').style.display = 'block'; }else{ document.getElementById('bib:" +
+                key +
+                "').style.display = 'none'; }"
+            }>[bib]</a>
+          </span>,
           doi match {
-            case Some(doi) => <span> <a href={ "http://dx.doi.org/" + doi }>[doi]</a></span>
+            case Some(doi) => <span>
+                                &nbsp;
+                                <a href={ "http://dx.doi.org/" + doi }>[doi]</a>
+                              </span>
             case _ => Text("")
-          }))
+          },
+          <div id={ "bib:" + key } class="bibsource" style="display:none">
+            <pre>{ bib }</pre>
+          </div>))
       }))
 
 }

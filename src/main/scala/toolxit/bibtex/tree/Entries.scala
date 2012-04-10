@@ -145,6 +145,6 @@ final case class BibEntry(name: String,
     fields.find(_.name == name).map(_.value)
 
   def toBibTeX = "@" + name + " {" + key + ",\n" +
-    fields.map(_.toBibTeX).mkString("  ", "\n  ", "\n}")
+    fields.map(_.toBibTeX).mkString("  ", ",\n  ", "\n}")
 
 }
