@@ -136,7 +136,7 @@ import scala.xml._
  *
  */
 class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
-    extends BibTeXRenderer[Elem](db, defaultStrings) {
+    extends BibTeXRenderer[Node](db, defaultStrings) {
 
   protected[this] def render(groups: List[(String, List[BibEntry])]) = {
     <table class="result">
@@ -437,40 +437,39 @@ class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
                           comment: Option[Value],
                           url: Option[Value],
                           doi: Option[Value]) =
-    <span>
+    Group(List(
       <span class="bibtitle">{
         url match {
           case Some(url) =>
             <a href={ url.toString }>{ title }</a>
-          case _ => title
+          case _ => Text(title.toString)
         }
-      }</span>
-      <span class="bibauthor">{ "(" + author + ")" }</span>
+      }</span>,
+      <span class="bibauthor">{ " (" + author + ")" }</span>,
       {
-        List(
+        Group(List(
           booktitle match {
             case Some(booktitle) =>
-              <span class="bibbooktitle">{ ", In " + booktitle }</span>
-            case _ => ""
+              <span class="bibbooktitle">{ ", \nIn " + booktitle }</span>
+            case _ => Text("")
           },
           publisher match {
             case Some(publisher) =>
-              <span class="bibpublisher">{ ", " + publisher }</span>
-            case _ => ""
+              <span class="bibpublisher">{ ", \n" + publisher }</span>
+            case _ => Text("")
           },
           year match {
-            case Some(year) => ", " + year + "."
-            case _ => "."
+            case Some(year) => Text(", \n" + year + ".")
+            case _ => Text(".")
           },
           comment match {
-            case Some(comment) => " (" + comment + ")"
-            case _ => ""
+            case Some(comment) => Text(" (" + comment + ")")
+            case _ => Text("")
           },
           doi match {
             case Some(doi) => <span> <a href={ "http://dx.doi.org/" + doi }>[doi]</a></span>
-            case _ => ""
-          })
-      }
-    </span>
+            case _ => Text("")
+          }))
+      }))
 
 }

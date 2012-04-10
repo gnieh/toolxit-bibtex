@@ -22,7 +22,7 @@ object Renderer extends App {
   parseAll(bibFile,
     new InputStreamReader(new FileInputStream(input), encoding)) match {
       case Success(res, _) =>
-        val renderer = new HtmlRenderer(res, Map.empty).groupByField("year", Descending)
+        val renderer = new HtmlRenderer(res, Map.empty).groupByType().sortBy("year")
         val html =
           <html>
             <head>
