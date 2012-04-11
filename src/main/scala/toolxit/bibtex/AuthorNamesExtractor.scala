@@ -22,9 +22,7 @@ import scala.util.parsing.combinator.RegexParsers
  * @author Lucas Satabin
  *
  */
-object AuthorNamesExtractor extends RegexParsers {
-
-  override def skipWhitespace = false
+object AuthorNamesExtractor extends StringUtils.StringParser {
 
   lazy val nameSep = """(?i)\s+and\s+""".r
 
@@ -32,23 +30,20 @@ object AuthorNamesExtractor extends RegexParsers {
     rep1sep(uptoNameSep, nameSep) ^^ (_.map(_.toString))
 
   lazy val uptoNameSep =
-    guard(nameSep) ~> "" ^^^ Word("") |
-      rep1(block | special | not(nameSep) ~> ".".r) ^^ (list => Sentence(list.mkString))
-
-  lazy val block: Parser[Block] =
-    "{" ~> rep("[^\\{}]+".r ^^ Sentence | special | block) <~ "}" ^^ Block
-
-  lazy val special: Parser[Special] =
-    "\\" ~> "[^\\s{]+".r ~ opt(rep("{") ~> "[^}]*".r <~ rep("}")) ^^ {
-      case spec ~ char => Special(spec, char)
-    }
+    guard(nameSep) ~> "" ^^^ Word(Nil) |
+      rep1(block | special | not(nameSep) ~> ".".r ^^
+        (str => CharacterLetter(str.charAt(0)))) ^^ Word
 
   def toList(authors: String) = {
     parseAll(names, authors).getOrElse(Nil).map { author =>
-      AuthorNameExtractor.parseAll(AuthorNameExtractor.author, author).getOrElse {
-        println("Wrong author format: " + author)
-        println("This author is omitted")
-        EmptyAuthor
+      try {
+        AuthorNameExtractor.parse(author)
+      } catch {
+        case e: Exception =>
+          println("Wrong author format: " + author)
+          println(e.getMessage)
+          println("This author is omitted")
+          EmptyAuthor
       }
     }
   }

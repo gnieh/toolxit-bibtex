@@ -16,6 +16,7 @@
 package toolxit.bibtex
 
 import scala.util.parsing.combinator.RegexParsers
+import scala.annotation.tailrec
 
 /**
  * @author Lucas Satabin
@@ -24,6 +25,7 @@ import scala.util.parsing.combinator.RegexParsers
 object StringUtils {
 
   implicit def char2testable(c: Char) = new {
+    def isAlphaNumeric = c.toString.matches("[a-zA-Z0-9]")
     def isBibTeXLower =
       if (c.isDigit)
         true
@@ -31,38 +33,79 @@ object StringUtils {
         c.isLower
   }
 
-  object StringParser extends RegexParsers {
+  object StringParser extends StringParser
+  class StringParser extends RegexParsers {
 
-    lazy val string: Parser[List[StringElement]] =
-      rep(block | special | "[^\\{}]+".r ^^ Word)
+    override def skipWhitespace = false
 
-    lazy val block: Parser[Block] =
-      "{" ~> rep("[^\\{}]+".r ^^ Sentence | special | block) <~ "}" ^^ Block
+    lazy val string: Parser[List[Word]] = rep(word)
 
-    lazy val special: Parser[Special] =
-      "\\" ~> "[^\\s{]+".r ~ opt(rep1("{") ~> "[^}]*".r <~ rep1("}")) ^^ {
-        case spec ~ char => Special(spec, char)
-      }
+    lazy val word: Parser[Word] = rep1(pseudoLetter) ^^ Word
+
+    lazy val pseudoLetter: Parser[PseudoLetter] = special | block | character
+
+    lazy val character: Parser[CharacterLetter] =
+      "[^\\{}\\s,]".r ^^ (s => CharacterLetter(s.charAt(0)))
+
+    lazy val block: Parser[BlockLetter] =
+      "{" ~>
+        rep(pseudoLetter
+          | "\\s".r ^^ (s => CharacterLetter(s.charAt(0)))) <~ "}" ^^ BlockLetter
+
+    lazy val special: Parser[SpecialLetter] =
+      "{\\" ~> "'|\"|[^\\s{]+".r ~
+        opt(rep1("{") ~> ("[^}\\s]*".r ^^ (s => (true, s))) <~ rep1("}")
+          | ("[^}\\s]".r ^^ (s => (false, s)))) <~ "}" ^^ {
+          case spec ~ Some((braces, char)) => SpecialLetter(spec, Some(char), braces)
+          case spec ~ None => SpecialLetter(spec, None, false)
+        }
 
   }
+
+  /* returns the first non brace character at level 0 if any */
+  def firstCharacter(str: Word): Option[Char] = {
+    @tailrec
+    def findFirst(letters: List[PseudoLetter]): Option[Char] = letters match {
+      case (_: BlockLetter) :: tail =>
+        findFirst(tail)
+      case SpecialLetter(spec, _, _) :: _ if spec.contains((c: Char) => c.isLetter) =>
+        spec.find(_.isLetter)
+      case SpecialLetter(_, Some(char), _) :: _ =>
+        char.find(_.isAlphaNumeric)
+      case CharacterLetter(c) :: _ if c.isLetter =>
+        Some(c)
+      case _ :: tail =>
+        findFirst(tail)
+      case Nil => None
+    }
+    findFirst(str.letters)
+  }
+
+  def isFirstCharacterLower(str: Word) =
+    firstCharacter(str).map(_.isBibTeXLower).getOrElse(false)
+
 }
 
-sealed trait StringElement
-final case class Block(parts: List[StringElement]) extends StringElement {
+sealed trait PseudoLetter
+final case class CharacterLetter(char: Char) extends PseudoLetter {
+  override def toString = char.toString
+}
+final case class BlockLetter(parts: List[PseudoLetter]) extends PseudoLetter {
   override def toString = parts.mkString("{", "", "}")
 }
-final case class Word(value: String) extends StringElement {
-  override def toString = value
-}
-final case class Sentence(value: String) extends StringElement {
-  override def toString = value
-}
-final case class Special(spec: String, char: Option[String]) extends StringElement {
+final case class SpecialLetter(command: String, arg: Option[String], withBraces: Boolean) extends PseudoLetter {
   override def toString = {
-    val block = char match {
-      case Some(c) => "{" + c + "}"
-      case _ => ""
+    val argument = arg match {
+      case Some(a) if withBraces => "{" + a + "}"
+      case Some(a) => a
+      case None => ""
     }
-    "\\" + spec + block
+    "{\\" + command + argument + "}"
   }
+}
+final case class Word(letters: List[PseudoLetter]) {
+  override def toString = letters.mkString
+}
+final case class Sentence(words: List[Word]) {
+  override def toString = words.mkString(" ")
 }

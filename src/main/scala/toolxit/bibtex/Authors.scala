@@ -40,6 +40,10 @@ class Author(val firstname: Option[String],
     hash
   }
 
+  def format(pattern: String) = {
+    ""
+  }
+
 }
 
 object Author {

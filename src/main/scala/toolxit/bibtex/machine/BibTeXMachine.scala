@@ -535,7 +535,9 @@ class BibTeXMachine(auxReader: Reader,
           case (Some(pattern), Some(authorNb), Some(authorList)) =>
             val list = AuthorNamesExtractor.toList(authorList)
             if (list.size > authorNb) {
-              push(AuthorNameExtractor.format(pattern, list(authorNb)))
+              // TODO: improve by caching the format for each pattern
+              val formatter = new NameFormatter(pattern)
+              push(formatter.format(list(authorNb)))
             } else {
               // wrong format, push null string
               push(NullStringValue)
