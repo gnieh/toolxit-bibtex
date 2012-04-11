@@ -56,7 +56,8 @@ object BibTeXParsers extends RegexParsers {
 
   lazy val entry: Parser[BibEntry] =
     ("@" ~> name <~ "{") ~ (key <~ ",") ~ repsep(positioned(field), ",") <~ opt(",") <~ "}" ^^ {
-      case name ~ key ~ fields => BibEntry(name.toLowerCase, key, fields)
+      case name ~ key ~ fields => BibEntry(name.toLowerCase, key,
+        fields.map(f => (f.name, f)).toMap)
     }
 
   lazy val field: Parser[Field] =

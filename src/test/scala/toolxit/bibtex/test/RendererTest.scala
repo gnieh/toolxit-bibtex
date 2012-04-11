@@ -22,7 +22,8 @@ object Renderer extends App {
   parseAll(bibFile,
     new InputStreamReader(new FileInputStream(input), encoding)) match {
       case Success(res, _) =>
-        val renderer = new HtmlRenderer(res, Map.empty).groupByField("year", Descending).sortBy("year")
+        val renderer = new HtmlRenderer(res).groupByField("year", Descending).sortBy("year")
+        val bibrenderer = new BibRenderer(res).groupByType().sortBy("year")
         val html =
           <html>
             <head>
@@ -42,6 +43,15 @@ object Renderer extends App {
         writer.write(html.toString)
         writer.flush
         writer.close
+
+        val bibfile = new File(Properties.userHome, "bib.bib")
+        file.createNewFile
+        val bibwriter = new OutputStreamWriter(
+          new FileOutputStream(bibfile), encoding)
+        bibwriter.write(bibrenderer.render)
+        bibwriter.flush
+        bibwriter.close
+
       case fail => println(fail)
     }
 

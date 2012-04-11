@@ -34,15 +34,15 @@ case class Not(filter: Filter) extends Filter {
 }
 case class FieldIs(fieldName: String, fieldValue: Value) extends Filter {
   def matches_?(entry: BibEntry) =
-    entry.fields.contains((f: Field) => f.name == fieldName && f.value == fieldValue)
+    entry.fields.get(fieldName).filter(_.value == fieldValue).isDefined
 }
 case class FieldLess(fieldName: String, fieldValue: Value) extends Filter {
   def matches_?(entry: BibEntry) =
-    entry.fields.contains((f: Field) => f.name == fieldName && f.value <= fieldValue)
+    entry.fields.get(fieldName).filter(_.value <= fieldValue).isDefined
 }
 case class FieldMore(fieldName: String, fieldValue: Value) extends Filter {
   def matches_?(entry: BibEntry) =
-    entry.fields.contains((f: Field) => f.name == fieldName && f.value >= fieldValue)
+    entry.fields.get(fieldName).filter(_.value >= fieldValue).isDefined
 }
 case class EntryIs(entryType: String) extends Filter {
   def matches_?(entry: BibEntry) =

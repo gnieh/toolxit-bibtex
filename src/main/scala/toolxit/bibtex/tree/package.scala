@@ -23,6 +23,6 @@ import tree._
  */
 package object tree {
 
-  lazy val UnknownEntry = BibEntry("unknown", "??", Nil)
+  lazy val UnknownEntry = BibEntry("unknown", "??", Map())
 
 }

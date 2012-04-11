@@ -24,8 +24,8 @@ import tree._
  * @author Lucas Satabin
  *
  */
-class SimpleRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
-    extends BibTeXRenderer[String](db, defaultStrings) {
+class SimpleRenderer(db: BibTeXDatabase)
+    extends BibTeXRenderer[String](db) with UniformRenderer[String] {
 
   protected[this] def render(groups: List[(String, List[BibEntry])]) = {
     groups.map {
@@ -34,7 +34,7 @@ class SimpleRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
           entries.map {
             case BibEntry(name, key, fields) =>
               "==== " + name + " (" + key + ") ====\n" +
-                fields.map {
+                fields.values.map {
                   case Field(fname, fvalue) =>
                     "  " + fname + ": " + fvalue
                 }.mkString("\n")
@@ -42,55 +42,10 @@ class SimpleRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
     }.mkString("\n\n")
   }
 
-  /** Renders an article */
-  def renderArticle(entry: BibEntry) = renderAny(entry)
-
-  /** Renders a book */
-  def renderBook(entry: BibEntry) = renderAny(entry)
-
-  /** Renders a booklet */
-  def renderBooklet(entry: BibEntry) = renderAny(entry)
-
-  /** Renders a conference */
-  def renderConference(entry: BibEntry) = renderAny(entry)
-
-  /** Renders an inbook */
-  def renderInBook(entry: BibEntry) = renderAny(entry)
-
-  /** Renders an incollection */
-  def renderInCollection(entry: BibEntry) = renderAny(entry)
-
-  /** Renders an inproceedings */
-  def renderInProceedings(entry: BibEntry) = renderAny(entry)
-
-  /** Renders a manual */
-  def renderManual(entry: BibEntry) = renderAny(entry)
-
-  /** Renders a masterthesis */
-  def renderMasterThesis(entry: BibEntry) = renderAny(entry)
-
-  /** Renders a misc */
-  def renderMisc(entry: BibEntry) = renderAny(entry)
-
-  /** Renders a phdthesis */
-  def renderPhdThesis(entry: BibEntry) = renderAny(entry)
-
-  /** Renders a proceedings */
-  def renderProceedings(entry: BibEntry) = renderAny(entry)
-
-  /** Renders a techreport */
-  def renderTechReport(entry: BibEntry) = renderAny(entry)
-
-  /** Renders a unpublished */
-  def renderUnpublished(entry: BibEntry) = renderAny(entry)
-
-  /** Renders an unknown */
-  def renderUnknown(entry: BibEntry) = renderAny(entry)
-
   protected[this] def renderAny(entry: BibEntry) = entry match {
     case BibEntry(name, key, fields) =>
       "==== " + name + " (" + key + ") ====\n" +
-        fields.map {
+        fields.values.map {
           case Field(fname, fvalue) =>
             "  " + fname + ": " + fvalue
         }.mkString("\n")

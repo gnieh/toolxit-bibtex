@@ -131,8 +131,8 @@ import scala.xml._
  * @author Lucas Satabin
  *
  */
-class HtmlRenderer(db: BibTeXDatabase, defaultStrings: Map[String, String])
-    extends BibTeXRenderer[Node](db, defaultStrings) {
+class HtmlRenderer(db: BibTeXDatabase)
+    extends BibTeXRenderer[Node](db) {
 
   protected[this] def render(groups: List[(String, List[BibEntry])]) = {
     <table class="result">

@@ -136,15 +136,15 @@ final case class PreambleEntry(value: ConcatValue) extends Entry
 
 final case class BibEntry(name: String,
                           key: String,
-                          fields: List[Field]) extends Entry {
+                          fields: Map[String, Field]) extends Entry {
   var sortKey = key
 
-  def sortValue = fields.find(_.name == sortKey).map(_.value).getOrElse(EmptyValue)
+  def sortValue = fields.find(_._1 == sortKey).map(_._2.value).getOrElse(EmptyValue)
 
   def field(name: String): Option[Value] =
-    fields.find(_.name == name).map(_.value)
+    fields.get(name).map(_.value)
 
   def toBibTeX = "@" + name + " {" + key + ",\n" +
-    fields.map(_.toBibTeX).mkString("  ", ",\n  ", "\n}")
+    fields.values.map(_.toBibTeX).mkString("  ", ",\n  ", "\n}")
 
 }

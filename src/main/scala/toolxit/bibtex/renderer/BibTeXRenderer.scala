@@ -26,7 +26,7 @@ import scala.collection.mutable.{ HashMap, MultiMap, LinkedHashSet }
  * @author Lucas Satabin
  *
  */
-abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrings: Map[String, String]) {
+abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase)(implicit val defaultStrings: Map[String, String]) {
 
   private[this] var _groupByField: Option[String] = None
   private[this] var _groupDirection: Direction = Ascending
@@ -183,7 +183,7 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase, val defaultStrin
           this
         }
       }
-    var env = defaultStrings.toMap
+    var env = defaultStrings //.toMap
 
     val filter = _filter.getOrElse(TrueFilter)
 
