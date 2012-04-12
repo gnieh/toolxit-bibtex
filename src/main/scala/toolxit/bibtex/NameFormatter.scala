@@ -39,47 +39,48 @@ class NameFormatter(pattern: String) {
   def format(author: Author): String = {
     parts.foldLeft("") { (result, current) =>
       val cur = current match {
-        case FirstPattern(true, before, sep, after) =>
+        case FirstPattern(true, before, sep, after) if author.first.nonEmpty =>
           format(before.getOrElse(""),
             author.first,
             sep,
             after.getOrElse(""))
-        case FirstPattern(false, before, sep, after) =>
+        case FirstPattern(false, before, sep, after) if author.first.nonEmpty =>
           format(before.getOrElse(""),
             shorten(author.first, sep),
             sep,
             after.getOrElse(""))
-        case LastPattern(true, before, sep, after) =>
+        case LastPattern(true, before, sep, after) if author.last.nonEmpty =>
           format(before.getOrElse(""),
             author.last,
             sep,
             after.getOrElse(""))
-        case LastPattern(false, before, sep, after) =>
+        case LastPattern(false, before, sep, after) if author.last.nonEmpty =>
           format(before.getOrElse(""),
             shorten(author.last, sep),
             sep,
             after.getOrElse(""))
-        case VonPattern(true, before, sep, after) =>
+        case VonPattern(true, before, sep, after) if author.von.nonEmpty =>
           format(before.getOrElse(""),
             author.von,
             sep,
             after.getOrElse(""))
-        case VonPattern(false, before, sep, after) =>
+        case VonPattern(false, before, sep, after) if author.von.nonEmpty =>
           format(before.getOrElse(""),
             shorten(author.von, sep),
             sep,
             after.getOrElse(""))
-        case JrPattern(true, before, sep, after) =>
+        case JrPattern(true, before, sep, after) if author.von.nonEmpty =>
           format(before.getOrElse(""),
             author.jr,
             sep,
             after.getOrElse(""))
-        case JrPattern(false, before, sep, after) =>
+        case JrPattern(false, before, sep, after) if author.von.nonEmpty =>
           format(before.getOrElse(""),
             shorten(author.jr, sep),
             sep,
             after.getOrElse(""))
-        case Other(text) => result + text
+        case Other(text) => text
+        case _ => ""
       }
       result + cur
     }
@@ -204,7 +205,7 @@ object PatternParser extends RegexParsers {
         case before ~ Some(sep) ~ None =>
           creator(full, before, sep, Some(sep))
         case before ~ None ~ after =>
-          creator(full, before, " ", after)
+          creator(full, before, if (full) " " else ".", after)
       }
 
 }
