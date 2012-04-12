@@ -15,52 +15,40 @@
 */
 package toolxit.bibtex
 
-class Author(val firstname: Option[String],
-             val von: Option[String],
-             val lastname: String,
-             val jr: Option[String]) {
+case class Author(first: List[Word],
+                  von: List[Word],
+                  last: List[Word],
+                  jr: List[Word]) {
+
+  def this(first: String, von: String, last: String, jr: String) =
+    this(StringUtils.StringParser.parseAll(StringUtils.StringParser.string, first).get,
+      StringUtils.StringParser.parseAll(StringUtils.StringParser.string, von).get,
+      StringUtils.StringParser.parseAll(StringUtils.StringParser.string, last).get,
+      StringUtils.StringParser.parseAll(StringUtils.StringParser.string, jr).get)
 
   override def toString =
-    "first: " + firstname +
+    "first: " + first +
       "\nvon: " + von +
-      "\nlast: " + lastname +
+      "\nlast: " + last +
       "\njr: " + jr
 
   override def equals(other: Any) = other match {
     case Author(f, v, l, j) =>
-      firstname == f && v == von && l == lastname && j == jr
+      first == f && v == von && l == last && j == jr
     case _ => false
   }
 
   override def hashCode = {
-    var hash = 31 + firstname.hashCode
+    var hash = 31 + first.hashCode
     hash = hash * 31 + von.hashCode
-    hash = hash * 31 + lastname.hashCode
+    hash = hash * 31 + last.hashCode
     hash = hash * 31 + jr.hashCode
     hash
-  }
-
-  def format(pattern: String) = {
-    ""
   }
 
 }
 
 object Author {
-  private def option(string: String) =
-    if (string.nonEmpty) Some(string) else None
-
-  def apply(first: String, von: String, last: String, jr: String): Author = {
-    val realFirst = option(first.trim)
-    val realVon = option(von.trim)
-    val realJr = option(jr.trim)
-    new Author(realFirst, realVon, last.trim, realJr)
-  }
-
-  def unapply(author: Author): Option[(Option[String], Option[String], String, Option[String])] = {
-    Some((author.firstname, author.von, author.lastname, author.jr))
-  }
-
+  def apply(first: String, von: String, last: String, jr: String): Author =
+    new Author(first.trim, von.trim, last.trim, jr.trim)
 }
-
-case object EmptyAuthor extends Author(None, None, "", None)

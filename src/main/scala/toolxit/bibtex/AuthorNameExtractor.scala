@@ -41,7 +41,7 @@ object AuthorNameExtractor {
             // the von part (if any) is anything between the first lower case 
             // word and the last one in lower case
             val (firstname, von, last) = toFirstVonLast(remaining)
-            Author(firstname, von, last + lastname, "")
+            Author(firstname, von, last ++ List(lastname), Nil)
           case _ => EmptyAuthor
         }
 
@@ -55,14 +55,14 @@ object AuthorNameExtractor {
             // remaining word, removing at least the last one which is in the lastname part
             val remaining = vonLast.dropRight(1)
             val (von, last) = toVonLast(remaining)
-            Author(first.mkString(" "), von, last + lastname, jr.mkString(" "))
+            Author(first, von, last ++ List(lastname), jr)
           case List(vonLast, first) =>
             // the lastname part contains at least the last word
             var lastname = vonLast.last
             // remaining word, removing at least the last one which is in the lastname part
             val remaining = vonLast.dropRight(1)
             val (von, last) = toVonLast(remaining)
-            Author(first.mkString(" "), von, last + lastname, "")
+            Author(first, von, last ++ List(lastname), Nil)
           case _ => EmptyAuthor
         }
 
@@ -72,9 +72,9 @@ object AuthorNameExtractor {
   }
 
   def toFirstVonLast(parts: List[Word]) = {
-    var first = ""
-    var von = ""
-    var last = ""
+    var first = List[Word]()
+    var von = List[Word]()
+    var last = List[Word]()
     var isFirst = true
     var hasVon = false
     parts.foreach { part =>
@@ -83,58 +83,53 @@ object AuthorNameExtractor {
         isFirst = false
         von =
           if (von.nonEmpty)
-            von.trim + " " + last.trim + " " + part.toString.trim
+            von ++ last ++ List(part)
           else
-            last.trim + " " + part.toString.trim
-        last = ""
+            last ++ List(part)
+        last = Nil
       } else if (isFirstCharacterLower(part)) {
         hasVon = true
         isFirst = false
         von =
           if (von.nonEmpty)
-            von.trim + " " + part.toString.trim
+            von ++ List(part)
           else
-            part.toString.trim
+            List(part)
       } else if (isFirst) {
-        first = first.trim + " " + part.toString.trim
+        first = first ++ List(part)
       } else {
-        last = last.trim + " " + part.toString.trim
+        last = last ++ List(part)
       }
     }
-    if (last.nonEmpty)
-      last = last + " "
     (first, von, last)
   }
 
   def toVonLast(parts: List[Word]) = {
-    var von = ""
-    var last = ""
+    var von = List[Word]()
+    var last = List[Word]()
     var first = true
     var hasVon = true
     parts.foreach { part =>
       if (isFirstCharacterLower(part) && hasVon && last.nonEmpty) {
-
         von =
           if (von.nonEmpty)
-            von.trim + " " + last.trim + " " + part.toString.trim
+            von ++ last ++ List(part)
           else
-            last.trim + " " + part.toString.trim
-        last = ""
+            last ++ List(part)
+        last = Nil
       } else if (isFirstCharacterLower(part) && hasVon) {
         von =
           if (von.nonEmpty)
-            von.trim + " " + part.toString.trim
+            von ++ List(part)
           else
-            part.toString.trim
+            List(part)
       } else {
         if (first)
           hasVon = false
-        last = last.trim + " " + part.toString.trim
+        last = last ++ List(part)
       }
       first = false
     }
-    if (last.nonEmpty)
-      last = last + " "
     (von, last)
   }
 

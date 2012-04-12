@@ -38,7 +38,8 @@ object StringUtils {
 
     override def skipWhitespace = false
 
-    lazy val string: Parser[List[Word]] = rep(word)
+    lazy val string: Parser[List[Word]] =
+      repsep(word | "," ^^^ Word(List(CharacterLetter(','))), "\\s+".r)
 
     lazy val word: Parser[Word] = rep1(pseudoLetter) ^^ Word
 

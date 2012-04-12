@@ -137,25 +137,25 @@ class NameFormatter(pattern: String) {
       current match {
         case FirstPattern(true, before, sep, after) =>
           format(before.getOrElse(""),
-            author.firstname.getOrElse("").split("\\s").toList,
+            author.first,
             sep,
             after.getOrElse(""))
         case FirstPattern(false, before, sep, after) =>
         case LastPattern(true, before, sep, after) =>
           format(before.getOrElse(""),
-            author.lastname.split("\\s").toList,
+            author.last,
             sep,
             after.getOrElse(""))
         case LastPattern(false, before, sep, after) =>
         case VonPattern(true, before, sep, after) =>
           format(before.getOrElse(""),
-            author.von.getOrElse("").split("\\s").toList,
+            author.von,
             sep,
             after.getOrElse(""))
         case VonPattern(false, before, sep, after) =>
         case JrPattern(true, before, sep, after) =>
           format(before.getOrElse(""),
-            author.jr.getOrElse("").split("\\s").toList,
+            author.jr,
             sep,
             after.getOrElse(""))
         case JrPattern(false, before, sep, after) =>
@@ -180,7 +180,7 @@ class NameFormatter(pattern: String) {
   // ====== helper methods ======
 
   @inline
-  private def format(before: String, values: List[String], sep: String, after: String) =
+  private def format(before: String, values: List[Word], sep: String, after: String) =
     values.mkString(before, sep, after)
 
 }
