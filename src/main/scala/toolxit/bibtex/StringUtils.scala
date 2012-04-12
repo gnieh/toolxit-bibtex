@@ -39,14 +39,24 @@ object StringUtils {
     override def skipWhitespace = false
 
     lazy val string: Parser[List[Word]] =
-      repsep(word | "," ^^^ Word(List(CharacterLetter(','))), "\\s+".r)
+      repsep(word | "," ^^^ SimpleWord(List(CharacterLetter(','))), "\\s+".r)
 
-    lazy val word: Parser[Word] = rep1(pseudoLetter) ^^ Word
+    lazy val word: Parser[Word] = composedword | simpleword
+
+    lazy val simpleword: Parser[SimpleWord] = rep1(pseudoLetter) ^^ SimpleWord
+
+    lazy val composedword: Parser[ComposedWord] =
+      simpleword ~ sep ~ word ^^ {
+        case first ~ sep ~ second => ComposedWord(first, second, sep)
+      }
 
     lazy val pseudoLetter: Parser[PseudoLetter] = special | block | character
 
     lazy val character: Parser[CharacterLetter] =
-      "[^\\{}\\s,]".r ^^ (s => CharacterLetter(s.charAt(0)))
+      "[^-~\\{}\\s,]".r ^^ (s => CharacterLetter(s.charAt(0)))
+
+    lazy val sep: Parser[CharacterLetter] =
+      "[-~]".r ^^ (s => CharacterLetter(s.charAt(0)))
 
     lazy val block: Parser[BlockLetter] =
       "{" ~>
@@ -104,7 +114,15 @@ final case class SpecialLetter(command: String, arg: Option[String], withBraces:
     "{\\" + command + argument + "}"
   }
 }
-final case class Word(letters: List[PseudoLetter]) {
+trait Word {
+  val letters: List[PseudoLetter]
+}
+final case class ComposedWord(first: Word, second: Word, sep: CharacterLetter) extends Word {
+  val letters = first.letters ++ List(sep) ++ second.letters
+  override def toString = "" + first + sep + second
+}
+final case class SimpleWord(letters: List[PseudoLetter]) extends Word {
+  def this(str: String) = this(str.toCharArray.map(CharacterLetter).toList)
   override def toString = letters.mkString
 }
 final case class Sentence(words: List[Word]) {

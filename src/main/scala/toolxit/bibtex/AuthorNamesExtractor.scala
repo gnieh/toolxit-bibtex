@@ -30,9 +30,9 @@ object AuthorNamesExtractor extends StringUtils.StringParser {
     rep1sep(uptoNameSep, nameSep) ^^ (_.map(_.toString))
 
   lazy val uptoNameSep =
-    guard(nameSep) ~> "" ^^^ Word(Nil) |
+    guard(nameSep) ~> "" ^^^ SimpleWord(Nil) |
       rep1(block | special | not(nameSep) ~> ".".r ^^
-        (str => CharacterLetter(str.charAt(0)))) ^^ Word
+        (str => CharacterLetter(str.charAt(0)))) ^^ SimpleWord
 
   def toList(authors: String) = {
     parseAll(names, authors).getOrElse(Nil).map { author =>
