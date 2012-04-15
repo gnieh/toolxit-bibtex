@@ -180,7 +180,10 @@ object PatternParser extends RegexParsers {
   lazy val other: Parser[Other] = uptoBlock
 
   lazy val block: Parser[String] =
-    "{" ~> rep("[^}{]*".r | block) <~ "}" ^^ (_.mkString)
+    "{" ~> rep("[^}{]+".r | block) <~ "}" ^^ (_.mkString("{", "", "}"))
+
+  lazy val sepblock: Parser[String] =
+    "{" ~> rep("[^}{]+".r | block) <~ "}" ^^ (_.mkString)
 
   lazy val uptoBlock =
     guard("{") ~> "" ^^^ Other("") |
@@ -190,13 +193,9 @@ object PatternParser extends RegexParsers {
 
   /* create a parser for a part */
   private def part(partName: String) =
-    "{" ~> (
-      opt(block | whiteSpace)
-      ~ (partName ~> opt(block))
-      ~ opt(block | "[^{}]+".r)) <~
-      "}"
+    "{" ~> opt(block) ~ (partName ~> opt(sepblock)) ~ opt(block | "[^{}]*".r) <~ "}"
 
-  /* takes a parse part and create the associated node */
+  /* takes a parsed part and creates the associated node */
   private def partCreator[T <: Pattern](full: Boolean, creator: (Boolean, Option[String], String, Option[String]) => T) =
     (input: ~[~[Option[String], Option[String]], Option[String]]) =>
       input match {
