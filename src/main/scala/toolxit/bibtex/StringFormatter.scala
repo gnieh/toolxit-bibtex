@@ -21,11 +21,9 @@ package toolxit.bibtex
  * @author Lucas Satabin
  *
  */
-trait StringFormatter {
-  def apply(string: List[Word]): List[Word]
-}
+trait StringFormatter extends (List[Word] => List[Word])
 
-object StringFormatterBuilder {
+object StringFormatters {
 
   /**
    * Flattens all blocks in the string by simply removing the braces.
