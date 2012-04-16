@@ -24,7 +24,7 @@ import scala.util.parsing.combinator.RegexParsers
  * @author Lucas Satabin
  *
  */
-class NameFormatter(pattern: String) {
+class NameFormatter(pattern: String) extends (Author => String) {
 
   // compile the pattern
   import PatternParser._
@@ -36,7 +36,7 @@ class NameFormatter(pattern: String) {
   /**
    * Formats the author according to the given pattern.
    */
-  def format(author: Author): String = {
+  def apply(author: Author): String = {
     parts.foldLeft("") { (result, current) =>
       val cur = current match {
         case FirstPattern(true, before, sep, after) if author.first.nonEmpty =>
@@ -99,8 +99,8 @@ class NameFormatter(pattern: String) {
       case SimpleWord((first: CharacterLetter) :: _) => List(first)
       case SimpleWord(SpecialLetter(_, Some(first), _) :: _) => shortenOne(new SimpleWord(first))
       case SimpleWord(SpecialLetter(_, None, _) :: tail) => shortenOne(SimpleWord(tail))
-      case SimpleWord(BlockLetter(first :: _) :: _) => List(first)
       case SimpleWord(BlockLetter(Nil) :: tail) => shortenOne(SimpleWord(tail))
+      case SimpleWord(BlockLetter(letters) :: _) => letters
       case ComposedWord(first, second, s) =>
         shortenOne(first) ++ (new SimpleWord(sep).letters) ++ List(s) ++ shortenOne(second)
       case _ =>

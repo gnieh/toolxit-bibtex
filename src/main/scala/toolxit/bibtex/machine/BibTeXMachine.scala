@@ -537,7 +537,7 @@ class BibTeXMachine(auxReader: Reader,
             if (list.size > authorNb) {
               // TODO: improve by caching the format for each pattern
               val formatter = new NameFormatter(pattern)
-              push(formatter.format(list(authorNb)))
+              push(formatter(list(authorNb)))
             } else {
               // wrong format, push null string
               push(NullStringValue)

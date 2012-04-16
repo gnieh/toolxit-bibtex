@@ -37,6 +37,50 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase)(implicit val def
   private[this] var _cached: Option[Rendered] = None
 
   /**
+   * The formatter used to format the author names.
+   * By default the format is First von Last, jr
+   * Override this to change name formatting.
+   */
+  protected[this] val nameFormatter = new NameFormatter("{ff }{vv }{ll }{{,}jj}.")
+
+  /**
+   * The separator put between each author name.
+   * By default, this is a comma.
+   * Override this to change name separator.
+   */
+  protected[this] val nameSeparator = ", "
+
+  /**
+   * The formatters that may be applied to strings before rendering them
+   * (in particular for author names).
+   * The order in the list matters as they will be applied in this order
+   * and result may.
+   * By default, nothing is done.
+   * Override this to change string formatting.
+   */
+  protected[this] val stringFormatters: List[StringFormatter] = Nil
+
+  protected[this] def applyFormatters(sentence: List[Word]) =
+    stringFormatters.foldLeft(sentence) { (result, form) =>
+      form(sentence)
+    }
+
+  /**
+   * Takes a string that is a list of names and returns the formatted
+   * version of this string according to formatter given in nameFormatters
+   */
+  def formatNames(names: String) = {
+    val formatAuthor = (author: Author) => author match {
+      case Author(first, von, last, jr) =>
+        Author(applyFormatters(first),
+          applyFormatters(von),
+          applyFormatters(last),
+          applyFormatters(jr))
+    }
+    AuthorNamesExtractor.toList(names).map(formatAuthor andThen nameFormatter).mkString(nameSeparator)
+  }
+
+  /**
    * Takes a BibTeX database and returns its rendered string representation.
    * The result is cached for more efficiency if it is called again.
    */

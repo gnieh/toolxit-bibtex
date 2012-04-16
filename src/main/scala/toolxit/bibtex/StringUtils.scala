@@ -113,6 +113,10 @@ final case class SpecialLetter(command: String, arg: Option[String], withBraces:
     }
     "{\\" + command + argument + "}"
   }
+
+  /** Returns the UTF8 representation of this special letter if known */
+  def toUTF8: Option[CharacterLetter] = SpecialCharacters(this).map(CharacterLetter)
+
 }
 trait Word {
   val letters: List[PseudoLetter]

@@ -470,7 +470,7 @@ class HtmlRenderer(db: BibTeXDatabase)
           case _ => Text(title.toString)
         }
       }</span>,
-      <span class="bibauthor">{ " (" + author + ")" }</span>,
+      <span class="bibauthor">{ " (" + formatNames(author.toString) + ")" }</span>,
       {
         Group(List(
           booktitle match {
