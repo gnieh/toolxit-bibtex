@@ -192,12 +192,12 @@ object PatternParser extends RegexParsers {
   // ====== helper methods ======
 
   def uptoPart(partName: String) =
-    guard(partName) ~> "" ^^^ "" |
-      rep1(not(partName) ~> ".".r) ^^ (_.mkString)
+    guard(partName) ^^^ None |
+      rep1(not(partName) ~> ".".r) ^^ (s => Some(s.mkString))
 
   /* create a parser for a part */
   private def part(partName: String) =
-    "{" ~> opt(block | uptoPart(partName)) ~ (partName ~> opt(sepblock)) ~ opt(block | "[^{}]*".r) <~ "}"
+    "{" ~> (opt(block) | uptoPart(partName)) ~ (partName ~> opt(sepblock)) ~ opt(block | "[^{}]*".r) <~ "}"
 
   /* takes a parsed part and creates the associated node */
   private def partCreator[T <: Pattern](full: Boolean, creator: (Boolean, Option[String], String, Option[String]) => T) =
