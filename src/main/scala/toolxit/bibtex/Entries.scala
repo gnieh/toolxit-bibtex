@@ -14,7 +14,6 @@
 * limitations under the License.
 */
 package toolxit.bibtex
-package tree
 
 import java.net.URL
 import scala.util.parsing.input.Positional

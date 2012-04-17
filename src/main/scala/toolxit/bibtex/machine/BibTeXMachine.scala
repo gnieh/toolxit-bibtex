@@ -653,7 +653,7 @@ class BibTeXMachine(auxReader: Reader,
 
         def buildEntryList(keys: List[String]): List[BibEntry] = keys match {
           case key :: tail =>
-            bibEntries.getOrElse(key, tree.UnknownEntry) :: buildEntryList(tail)
+            bibEntries.getOrElse(key, UnknownEntry) :: buildEntryList(tail)
           case _ => List()
         }
         // gets the entries from the database that are in the .aux file

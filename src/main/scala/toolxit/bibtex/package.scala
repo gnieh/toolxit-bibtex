@@ -23,4 +23,6 @@ package object bibtex {
 
   lazy val EmptyAuthor = Author(Nil, Nil, Nil, Nil)
 
+  lazy val UnknownEntry = BibEntry("unknown", "??", Map())
+
 }
