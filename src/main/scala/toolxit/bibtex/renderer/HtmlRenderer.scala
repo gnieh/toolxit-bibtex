@@ -452,6 +452,9 @@ class HtmlRenderer(db: BibTeXDatabase)
 
   // ====== Helper Methods ======
 
+  override protected[this] lazy val stringFormatter =
+    StringFormatters.flatten
+
   private def renderEntry(key: String,
                           title: Value,
                           author: Value,
@@ -466,8 +469,8 @@ class HtmlRenderer(db: BibTeXDatabase)
       <span class="bibtitle">{
         url match {
           case Some(url) =>
-            <a href={ url.toString }>{ title }</a>
-          case _ => Text(title.toString)
+            <a href={ stringFormatter(url.toString) }>{ stringFormatter(title.toString) }</a>
+          case _ => Text(stringFormatter(title.toString))
         }
       }</span>,
       <span class="bibauthor">{ " (" + formatNames(author.toString) + ")" }</span>,
@@ -475,20 +478,20 @@ class HtmlRenderer(db: BibTeXDatabase)
         Group(List(
           booktitle match {
             case Some(booktitle) =>
-              <span class="bibbooktitle">{ ", \nIn " + booktitle }</span>
+              <span class="bibbooktitle">{ ", \nIn " + stringFormatter(booktitle.toString) }</span>
             case _ => Text("")
           },
           publisher match {
             case Some(publisher) =>
-              <span class="bibpublisher">{ ", \n" + publisher }</span>
+              <span class="bibpublisher">{ ", \n" + stringFormatter(publisher.toString) }</span>
             case _ => Text("")
           },
           year match {
-            case Some(year) => Text(", \n" + year + ".")
+            case Some(year) => Text(", \n" + stringFormatter(year.toString) + ".")
             case _ => Text(".")
           },
           comment match {
-            case Some(comment) => Text(" (" + comment + ")")
+            case Some(comment) => Text(" (" + stringFormatter(comment.toString) + ")")
             case _ => Text("")
           },
           <span>
