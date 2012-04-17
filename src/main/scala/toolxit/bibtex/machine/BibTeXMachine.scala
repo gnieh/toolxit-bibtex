@@ -33,114 +33,12 @@ case class BibTeXException(msg: String, errors: List[String]) extends Exception(
 class BibTeXMachine(auxReader: Reader,
                     bstReader: Reader,
                     bibReader: Reader,
-                    output: Writer) {
-
-  // ==== internal constants ====
-  // you may change this values to accept larger strings
-
-  // maximum length of global strings
-  private val globalMax = IntVariable(1000)
-  // maximum length of entry strings
-  private val entryMax = IntVariable(1000)
-
-  // ==== the stack ====
-  private val stack = Stack.empty[StackValue]
-
-  // ==== the environment ====
-  // var name -> value
-  private val globalVariables = Map.empty[String, Variable]
-  // var name -> entry name -> value
-  private val entryVariables = Map.empty[String, Map[String, Variable]]
-  // field name -> entry name -> value
-  private val fields = Map.empty[String, Map[String, Variable]]
-  // name -> instructions
-  private val functions = Map.empty[String, FunctionVariable]
-  // name -> value
-  private val macros = Map.empty[String, MacroVariable]
-  // value
-  private val preambles = ListBuffer.empty[String]
+                    output: Writer)
+    extends Environment
+    with StackUtils {
 
   // the output buffer
   private val buffer = new StringBuilder
-
-  /* searches the name in the environment.
-   *  - first looks for the name in fields for current entry (if any)
-   *  - if not found, looks for the name in entryVariables (if any)
-   *  - if not found, looks for the name in globalVariables
-   *  - if not found, looks for the name in macros
-   *  - if not found, looks for the name in functions */
-  private def lookup(name: String) = {
-    var result =
-      if (currentEntry.value.isDefined) {
-        val entryName = currentEntry.value.get.key
-        if (fields.contains(name)) {
-          // it is a field
-          fields(name).get(entryName)
-        } else if (entryVariables.contains(name)) {
-          // it is not a field, maybe an entry variable
-          entryVariables(name).get(entryName)
-        } else {
-          None
-        }
-      } else {
-        None
-      }
-
-    if (result.isEmpty) {
-      // not an entry local variable
-      if (globalVariables.contains(name))
-        // is it a global variable?
-        globalVariables.get(name)
-      else if (macros.contains(name))
-        // is it a macro?
-        macros.get(name)
-      else
-        // at last lookup for a function
-        functions.get(name)
-    } else {
-      result
-    }
-  }
-
-  /* saves the variable at the appropriate place in the environment
-   * if the name is not defined, throws an exception
-   * only global and entry variables may be assigned */
-  private def assign(name: String, value: Variable) {
-    if (currentEntry.value.isDefined && entryVariables.contains(name)) {
-      val entryName = currentEntry.value.get.key
-      // truncate to the entry max
-      val real = value match {
-        case StringVariable(Some(s)) if s.length > entryMax.value.get =>
-          StringVariable(s.substring(0, entryMax.value.get))
-        case _ => value
-      }
-      entryVariables(name)(entryName) = real
-    } else if (globalVariables.contains(name)) {
-      // truncate to the global max
-      val real = value match {
-        case StringVariable(Some(s)) if s.length > globalMax.value.get =>
-          StringVariable(s.substring(0, globalMax.value.get))
-        case _ => value
-      }
-      globalVariables(name) = real
-    } else {
-      throw BibTeXException("Unable to run .bst file",
-        List(name + " is not declared, thus cannot be assigned"))
-    }
-  }
-
-  /* only global and entry variables may be assigned */
-  private def canAssign(name: String) =
-    (currentEntry.value.isDefined && entryVariables.contains(name)) ||
-      globalVariables.contains(name)
-
-  // the entries in the .bib file, sorted first following citation order
-  // the SORT command may change the order of bib entries in this list
-  // this list is filled when the .bib file is read by the READ command
-  private var entries = List[BibEntry]()
-
-  // contains the currently processed entry
-  private val currentEntry = new DynamicVariable[Option[BibEntry]](None)
 
   // ==== the standard entry types ====
   private val standardTypes = Set(
@@ -779,109 +677,29 @@ class BibTeXMachine(auxReader: Reader,
     StringFormatters.toUpper(s)
 
   private def purify(s: String) = {
-    // TODO
-    s
+    import StringUtils.StringParser
+    StringParser.parseAll(StringParser.string, s) match {
+      case StringParser.Success(res, _) =>
+        def purifyWord(word: Word): String =
+          word.letters.foldLeft("") { (result, current) =>
+            val purified = current match {
+              case CharacterLetter(c) if c.isLetterOrDigit => c
+              case CharacterLetter('-') => " "
+              case CharacterLetter('~') => " "
+              case SpecialLetter(_, Some(arg), false) => arg
+              case BlockLetter(parts) => purifyWord(SimpleWord(parts))
+              case _ => ""
+            }
+            result + purified
+          }
+        res.map(purifyWord _).mkString(" ")
+      case fail =>
+        warning(fail.toString)
+        s
+    }
   }
 
   // ==== helper functions ====
-
-  /* pushes an int on the stack */
-  private def push(i: Int) {
-    stack.push(SIntValue(i))
-  }
-
-  /* pushes a string on the stack */
-  private def push(s: String) {
-    stack.push(SStringValue(s))
-  }
-
-  /* pushes a symbol on the stack */
-  private def push(v: StackValue) {
-    stack.push(v)
-  }
-
-  /* pops an integer from the stack. If the value is not an 
-   * integer or does not exist, None is returned */
-  private def popInt = {
-    if (stack.isEmpty)
-      None
-    else
-      stack.pop match {
-        case SIntValue(i) => Some(i)
-        case _ => None
-      }
-  }
-
-  /* pops a string from the stack. If the value is not a 
-   * string or does not exist, None is returned */
-  private def popString = {
-    if (stack.isEmpty)
-      None
-    else
-      stack.pop match {
-        case SStringValue(s) => Some(s)
-        case _ => None
-      }
-  }
-
-  /* pops a function from the stack. If the value is not a 
-   * function or does not exist, None is returned */
-  private def popFunction = {
-    if (stack.isEmpty)
-      None
-    else
-      stack.pop match {
-        case FunctionValue(instr) =>
-          // it is directly a block on the stack
-          Some(instr)
-        case SStringValue(str) =>
-          // it is a name on the stack, look if it represents a function
-          functions.get(str).map(_.instr)
-        case _ => None
-      }
-  }
-
-  /* pops a value from the stack. If the stack is empty returns None */
-  private def pop = {
-    if (stack.isEmpty)
-      None
-    else
-      Some(stack.pop)
-  }
-
-  /* resolves the value list to a concatenated string */
-  private def resolve(values: List[Value]) =
-    values.foldLeft("") { (res, cur) =>
-      cur match {
-        case StringValue(value) => res + value
-        case NameValue(value) if (macros.contains(value)) =>
-          res + macros(value)
-        case NameValue(value) => res + value
-        case IntValue(value) => res + value
-        case EmptyValue => res
-        case _: ConcatValue => // should not happen!!!
-          res
-      }
-    }
-
-  /* clears all entries in the environment */
-  private def cleanEnv {
-    globalVariables.clear
-    entryVariables.clear
-    fields.clear
-    functions.clear
-    macros.clear
-    entries = Nil
-    currentEntry.value = None
-  }
-
-  /* initializes the environment with built-in variables and fields */
-  private def initEnv {
-    fields("crossref") = Map()
-    entryVariables("sort.key$") = Map()
-    globalVariables("entry.max$") = entryMax
-    globalVariables("global.max$") = globalMax
-  }
 
   /* writes a warning message on the standard output */
   private def warning(string: String) {
@@ -889,36 +707,3 @@ class BibTeXMachine(auxReader: Reader,
   }
 
 }
-
-// ==== values that are pushed on the stack ====
-sealed trait StackValue {
-  def toVar: Variable
-}
-final case class SStringValue(value: String) extends StackValue {
-  def toVar = StringVariable(value)
-}
-case object NullStringValue extends StackValue {
-  def toVar = StringVariable()
-}
-final case class SIntValue(value: Int) extends StackValue {
-  def toVar = IntVariable(value)
-}
-final case class FunctionValue(instructions: BstBlock) extends StackValue {
-  def toVar = FunctionVariable(instructions)
-}
-case object MissingValue extends StackValue {
-  def toVar = StringVariable()
-}
-
-// ==== global variables ====
-sealed trait Variable
-final case class IntVariable(value: Option[Int] = None) extends Variable
-object IntVariable {
-  def apply(i: Int): IntVariable = IntVariable(Some(i))
-}
-final case class StringVariable(value: Option[String] = None) extends Variable
-object StringVariable {
-  def apply(s: String): StringVariable = StringVariable(Some(s))
-}
-final case class MacroVariable(value: String) extends Variable
-final case class FunctionVariable(instr: BstBlock) extends Variable
