@@ -66,7 +66,7 @@ object StringUtils {
     lazy val special: Parser[SpecialLetter] =
       "{\\" ~> "'|\"|´|`|\\^|~|[^\\s{}'\"´`^~]+".r ~
         opt(block ^^ (s => (true, s.parts.mkString))
-          | ("\\s+[^{}\\s]+\\s*".r ^^ (s => (false, s.trim)))) <~ "}" ^^ {
+          | ("\\s*[^{}\\s]+\\s*".r ^^ (s => (false, s.trim)))) <~ "}" ^^ {
           case spec ~ Some((braces, char)) => SpecialLetter(spec, Some(char), braces)
           case spec ~ None => SpecialLetter(spec, None, false)
         }
