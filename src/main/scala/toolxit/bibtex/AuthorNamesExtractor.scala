@@ -31,7 +31,7 @@ object AuthorNamesExtractor extends StringUtils.StringParser {
 
   lazy val uptoNameSep =
     guard(nameSep) ~> "" ^^^ SimpleWord(Nil) |
-      rep1(block | special | not(nameSep) ~> ".".r ^^
+      rep1(block | special | not(nameSep) ~> ".|\\s".r ^^
         (str => CharacterLetter(str.charAt(0)))) ^^ SimpleWord
 
   def toList(authors: String) = {
