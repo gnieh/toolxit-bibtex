@@ -21,7 +21,16 @@ package toolxit.bibtex
  * @author Lucas Satabin
  *
  */
-trait StringFormatter extends (List[Word] => List[Word])
+trait StringFormatter extends (String => String) {
+  def apply(string: String): String = {
+    import StringUtils.StringParser
+    StringParser.parseAll(StringParser.string, string) match {
+      case StringParser.Success(res, _) => this(res).mkString(" ")
+      case _ => string
+    }
+  }
+  def apply(string: List[Word]): List[Word]
+}
 
 object StringFormatters {
 

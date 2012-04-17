@@ -41,7 +41,7 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase)(implicit val def
    * By default the format is First von Last, jr
    * Override this to change name formatting.
    */
-  protected[this] val nameFormatter = new NameFormatter("{ff }{vv }{ll }{{,}jj}.")
+  protected[this] val nameFormatter = new NameFormatter("{ff}{{ }vv}{{ }ll}{{, }jj}")
 
   /**
    * The separator put between each author name.
@@ -54,31 +54,25 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase)(implicit val def
    * The formatters that may be applied to strings before rendering them
    * (in particular for author names).
    * The order in the list matters as they will be applied in this order
-   * and result may.
+   * and result may be different. To chain several formatters, use the
+   * `andThen' operator:
+   * <pre>
+   * override protected[this] lazy val stringFormatter = formatter1 andThen formatter2
+   * </pre>
    * By default, nothing is done.
    * Override this to change string formatting.
    */
-  protected[this] val stringFormatters: List[StringFormatter] = Nil
-
-  protected[this] def applyFormatters(sentence: List[Word]) =
-    stringFormatters.foldLeft(sentence) { (result, form) =>
-      form(sentence)
-    }
+  protected[this] lazy val stringFormatter: StringFormatter = new StringFormatter {
+    def apply(sentence: List[Word]) = sentence // do nothing by default
+  }
 
   /**
    * Takes a string that is a list of names and returns the formatted
    * version of this string according to formatter given in nameFormatters
    */
-  def formatNames(names: String) = {
-    val formatAuthor = (author: Author) => author match {
-      case Author(first, von, last, jr) =>
-        Author(applyFormatters(first),
-          applyFormatters(von),
-          applyFormatters(last),
-          applyFormatters(jr))
-    }
-    AuthorNamesExtractor.toList(names).map(formatAuthor andThen nameFormatter).mkString(nameSeparator)
-  }
+  def formatNames(names: String) =
+    AuthorNamesExtractor.toList(names).map(
+      nameFormatter andThen stringFormatter).mkString(nameSeparator)
 
   /**
    * Takes a BibTeX database and returns its rendered string representation.
