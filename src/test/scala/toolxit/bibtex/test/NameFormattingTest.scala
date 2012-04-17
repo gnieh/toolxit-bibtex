@@ -31,9 +31,3 @@ class NameFormattingTest extends FlatSpec with ShouldMatchers {
   }
 
 }
-
-object FormatTest extends App {
-  val formatter = new NameFormatter("{f. }{ll}")
-  println(formatter(Author("{Ch}ristopher", "", "Lee", "")))
-
-}
