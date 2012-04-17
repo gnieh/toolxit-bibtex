@@ -392,8 +392,9 @@ class BibTeXMachine(auxReader: Reader,
               push(1)
             else
               push(0)
-          case _ =>
+          case pair =>
             // error, push 0
+            warning("The popped values were: " + pair)
             push(0)
         }
       case BstInferior =>
@@ -453,6 +454,8 @@ class BibTeXMachine(auxReader: Reader,
             throw BibTeXException("Unable to run .bst file",
               List("Wrong arguments on stack"))
         }
+      case block: BstBlock =>
+        push(FunctionValue(block))
       case BstAddPeriod =>
         popString match {
           case Some(s) =>
@@ -651,11 +654,63 @@ class BibTeXMachine(auxReader: Reader,
       case BstTextPrefix =>
         (popInt, popString) match {
           case (Some(nb), Some(str)) =>
-
+            import StringUtils.StringParser
+            StringParser.parseAll(StringParser.string, str) match {
+              case StringParser.Success(res, _) =>
+                res.foldLeft(0) { (result, current) =>
+                  result + current.length
+                }
+              case _ =>
+                // error, push 0
+                push(0)
+            }
           case _ =>
             // error, push null string
             push(NullStringValue)
         }
+      case BstTop =>
+        pop.foreach(println _)
+      case BstType =>
+        currentEntry.value match {
+          case Some(entry) =>
+            push(entry.name)
+          case None =>
+            // error, push null string
+            push(NullStringValue)
+        }
+      case BstWarning =>
+        popString match {
+          case Some(str) =>
+            warning(str)
+          case None => // do nothing
+        }
+      case BstWhile =>
+        (popFunction, popFunction) match {
+          case (Some(block), Some(cond)) =>
+            def condition = {
+              execute(cond)
+              popInt
+            }
+            while (condition.getOrElse(0) > 0) {
+              execute(block)
+            }
+          case _ => // do nothing
+        }
+      case BstWidth =>
+        // TODO implement
+        throw new Exception("Width not implemented yet…")
+      case BstWrite =>
+        popString match {
+          case Some(str) =>
+            buffer.append(str)
+            // flush the buffer to the file
+            output.write(buffer.toString)
+            output.flush
+            // empty the buffer
+            buffer.clear
+          case _ => // do nothing
+        }
+
     }
 
   /* reads and loads the .bib database */
@@ -776,7 +831,12 @@ class BibTeXMachine(auxReader: Reader,
       None
     else
       stack.pop match {
-        case FunctionValue(instr) => Some(instr)
+        case FunctionValue(instr) =>
+          // it is directly a block on the stack
+          Some(instr)
+        case SStringValue(str) =>
+          // it is a name on the stack, look if it represents a function
+          functions.get(str).map(_.instr)
         case _ => None
       }
   }
@@ -821,6 +881,11 @@ class BibTeXMachine(auxReader: Reader,
     entryVariables("sort.key$") = Map()
     globalVariables("entry.max$") = entryMax
     globalVariables("global.max$") = globalMax
+  }
+
+  /* writes a warning message on the standard output */
+  private def warning(string: String) {
+    println("[WARN] " + string) // TODO improve with logging library?
   }
 
 }
