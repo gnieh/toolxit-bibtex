@@ -69,12 +69,12 @@ class NameFormatter(pattern: String) extends (Author => String) {
             shorten(author.von, sep),
             sep,
             after.getOrElse(""))
-        case JrPattern(true, before, sep, after) if author.von.nonEmpty =>
+        case JrPattern(true, before, sep, after) if author.jr.nonEmpty =>
           format(before.getOrElse(""),
             author.jr,
             sep,
             after.getOrElse(""))
-        case JrPattern(false, before, sep, after) if author.von.nonEmpty =>
+        case JrPattern(false, before, sep, after) if author.jr.nonEmpty =>
           format(before.getOrElse(""),
             shorten(author.jr, sep),
             sep,
