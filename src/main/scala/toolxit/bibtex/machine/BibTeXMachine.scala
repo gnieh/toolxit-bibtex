@@ -678,20 +678,14 @@ class BibTeXMachine(auxReader: Reader,
     entries = entries.sortBy(_.sortValue)
   }
 
-  private def toLowerButFirst(s: String) = {
-    // TODO
-    s
-  }
+  private def toLowerButFirst(s: String) =
+    StringFormatters.toLowerButFirst(s)
 
-  private def toLower(s: String) = {
-    // TODO
-    s
-  }
+  private def toLower(s: String) =
+    StringFormatters.toLower(s)
 
-  private def toUpper(s: String) = {
-    // TODO
-    s
-  }
+  private def toUpper(s: String) =
+    StringFormatters.toUpper(s)
 
   private def purify(s: String) = {
     // TODO
