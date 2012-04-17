@@ -620,6 +620,42 @@ class BibTeXMachine(auxReader: Reader,
             // error, push null string
             push(NullStringValue)
         }
+      case BstSwap =>
+        (pop, pop) match {
+          case (Some(first), Some(second)) =>
+            push(first)
+            push(second)
+          case (Some(first), None) =>
+            push(first) // actually, do nothing
+          case _ => // nothing was popped (empty stack), do nothing
+        }
+      case BstTextLength =>
+        popString match {
+          case Some(str) =>
+            // TODO, is this really correct according to standard BibTeX behavior?
+            import StringUtils.StringParser
+            StringParser.parseAll(StringParser.string, str) match {
+              case StringParser.Success(res, _) =>
+                res.foldLeft(0) { (result, current) =>
+                  result + current.length
+                }
+              case _ =>
+                // error, push 0
+                push(0)
+            }
+            push(StringFormatters.flatten(str).length)
+          case None =>
+            // error, push 0
+            push(0)
+        }
+      case BstTextPrefix =>
+        (popInt, popString) match {
+          case (Some(nb), Some(str)) =>
+
+          case _ =>
+            // error, push null string
+            push(NullStringValue)
+        }
     }
 
   /* reads and loads the .bib database */

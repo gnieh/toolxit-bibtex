@@ -60,7 +60,7 @@ object StringUtils {
 
     lazy val block: Parser[BlockLetter] =
       "{" ~>
-        rep(pseudoLetter
+        rep(block | character
           | "\\s".r ^^ (s => CharacterLetter(s.charAt(0)))) <~ "}" ^^ BlockLetter
 
     lazy val special: Parser[SpecialLetter] =
@@ -120,13 +120,27 @@ final case class SpecialLetter(command: String, arg: Option[String], withBraces:
 }
 trait Word {
   val letters: List[PseudoLetter]
+  val length: Int
 }
 final case class ComposedWord(first: Word, second: Word, sep: CharacterLetter) extends Word {
   val letters = first.letters ++ List(sep) ++ second.letters
+  val length = first.length + second.length + 1
   override def toString = "" + first + sep + second
 }
 final case class SimpleWord(letters: List[PseudoLetter]) extends Word {
   def this(str: String) = this(str.toCharArray.map(CharacterLetter).toList)
+  val length = letters.foldLeft(0) { (result, current) =>
+    def internalCount(letter: PseudoLetter, depth: Int): Int = letter match {
+      case _: CharacterLetter => 1
+      case _: SpecialLetter if depth == 0 =>
+        // only special characters at brace level 0 count
+        1
+      case BlockLetter(parts) =>
+        parts.map(internalCount(_, depth + 1)).sum
+      case _ => 0
+    }
+    result + internalCount(current, 0)
+  }
   override def toString = letters.mkString
 }
 final case class Sentence(words: List[Word]) {
