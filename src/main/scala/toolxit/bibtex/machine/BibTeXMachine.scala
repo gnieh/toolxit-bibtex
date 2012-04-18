@@ -35,7 +35,7 @@ class BibTeXMachine(auxReader: Reader,
                     bibReader: Reader,
                     output: Writer)
     extends Environment
-    with StackUtils {
+    with StackMachine {
 
   // the output buffer
   private val buffer = new StringBuilder

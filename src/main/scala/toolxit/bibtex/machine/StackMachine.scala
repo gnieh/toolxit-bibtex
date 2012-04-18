@@ -18,10 +18,12 @@ package toolxit.bibtex.machine
 import scala.collection.mutable.Stack
 
 /**
+ * This trait proovides stack capabilities to a machine.
+ *
  * @author Lucas Satabin
  *
  */
-trait StackUtils {
+trait StackMachine {
   this: Environment =>
 
   // ==== the stack ====
