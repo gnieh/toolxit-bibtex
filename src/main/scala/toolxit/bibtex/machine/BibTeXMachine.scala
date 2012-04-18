@@ -20,6 +20,7 @@ import bst._
 import scala.util.DynamicVariable
 import scala.collection.mutable.{ Map, Stack, ListBuffer, StringBuilder }
 import java.io.{ Reader, Writer }
+import com.weiglewilczek.slf4s.Logging
 
 case class BibTeXException(msg: String, errors: List[String]) extends Exception(msg)
 
@@ -35,7 +36,9 @@ class BibTeXMachine(auxReader: Reader,
                     bibReader: Reader,
                     output: Writer)
     extends Environment
-    with StackMachine {
+    with StackMachine
+    with BuiltIn
+    with Logging {
 
   // the output buffer
   private val buffer = new StringBuilder
@@ -292,7 +295,7 @@ class BibTeXMachine(auxReader: Reader,
               push(0)
           case pair =>
             // error, push 0
-            warning("The popped values were: " + pair)
+            logger.warn("The popped values were: " + pair + ". Unable to compare them.")
             push(0)
         }
       case BstInferior =>
@@ -302,8 +305,9 @@ class BibTeXMachine(auxReader: Reader,
               push(1)
             else
               push(0)
-          case _ =>
+          case pair =>
             // error, push 0
+            logger.warn("The popped values were: " + pair + ". Unable to compare them.")
             push(0)
         }
       case BstEquals =>
@@ -357,14 +361,10 @@ class BibTeXMachine(auxReader: Reader,
       case BstAddPeriod =>
         popString match {
           case Some(s) =>
-            val idx = s.lastIndexWhere(_ != '}')
-            if (idx >= 0 && Set('.', '?', '!').contains(s(idx))) {
-              push(s)
-            } else {
-              push(s + ".")
-            }
+            push(addPeriod$(s))
           case None =>
             // error, push null string
+            logger.warn("No string on top of the stack, impossible to invoke `add.period$'")
             push(NullStringValue)
         }
       case BstCallType =>
@@ -579,7 +579,7 @@ class BibTeXMachine(auxReader: Reader,
       case BstWarning =>
         popString match {
           case Some(str) =>
-            warning(str)
+            logger.warn(str)
           case None => // do nothing
         }
       case BstWhile =>
@@ -665,45 +665,6 @@ class BibTeXMachine(auxReader: Reader,
     }
     // sort the keys according to the sort key
     entries = entries.sortBy(_.sortValue)
-  }
-
-  private def toLowerButFirst(s: String) =
-    StringFormatters.toLowerButFirst(s)
-
-  private def toLower(s: String) =
-    StringFormatters.toLower(s)
-
-  private def toUpper(s: String) =
-    StringFormatters.toUpper(s)
-
-  private def purify(s: String) = {
-    import StringUtils.StringParser
-    StringParser.parseAll(StringParser.string, s) match {
-      case StringParser.Success(res, _) =>
-        def purifyWord(word: Word): String =
-          word.letters.foldLeft("") { (result, current) =>
-            val purified = current match {
-              case CharacterLetter(c) if c.isLetterOrDigit => c
-              case CharacterLetter('-') => " "
-              case CharacterLetter('~') => " "
-              case SpecialLetter(_, Some(arg), false) => arg
-              case BlockLetter(parts) => purifyWord(SimpleWord(parts))
-              case _ => ""
-            }
-            result + purified
-          }
-        res.map(purifyWord _).mkString(" ")
-      case fail =>
-        warning(fail.toString)
-        s
-    }
-  }
-
-  // ==== helper functions ====
-
-  /* writes a warning message on the standard output */
-  private def warning(string: String) {
-    println("[WARN] " + string) // TODO improve with logging library?
   }
 
 }
