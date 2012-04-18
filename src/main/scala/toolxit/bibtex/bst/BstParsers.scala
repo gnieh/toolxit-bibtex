@@ -14,9 +14,8 @@
 * limitations under the License.
 */
 package toolxit.bibtex
-package machine
+package bst
 
-import tree._
 import scala.util.parsing.combinator.RegexParsers
 
 /**

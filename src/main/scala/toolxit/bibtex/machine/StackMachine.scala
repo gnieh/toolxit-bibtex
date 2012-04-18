@@ -13,7 +13,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package toolxit.bibtex.machine
+package toolxit.bibtex
+package machine
 
 import scala.collection.mutable.Stack
 
@@ -108,7 +109,7 @@ case object NullStringValue extends StackValue {
 final case class SIntValue(value: Int) extends StackValue {
   def toVar = IntVariable(value)
 }
-final case class FunctionValue(instructions: BstBlock) extends StackValue {
+final case class FunctionValue(instructions: bst.BstBlock) extends StackValue {
   def toVar = FunctionVariable(instructions)
 }
 case object MissingValue extends StackValue {

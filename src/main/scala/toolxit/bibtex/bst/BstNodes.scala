@@ -14,7 +14,7 @@
 * limitations under the License.
 */
 package toolxit.bibtex
-package machine
+package bst
 
 import scala.util.parsing.input.Positional
 

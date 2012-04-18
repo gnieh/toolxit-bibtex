@@ -16,7 +16,7 @@
 package toolxit.bibtex
 package machine
 
-import tree._
+import bst._
 import scala.util.DynamicVariable
 import scala.collection.mutable.{ Map, Stack, ListBuffer, StringBuilder }
 import java.io.{ Reader, Writer }

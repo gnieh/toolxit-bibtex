@@ -175,4 +175,4 @@ object StringVariable {
   def apply(s: String): StringVariable = StringVariable(Some(s))
 }
 final case class MacroVariable(value: String) extends Variable
-final case class FunctionVariable(instr: BstBlock) extends Variable
+final case class FunctionVariable(instr: bst.BstBlock) extends Variable
