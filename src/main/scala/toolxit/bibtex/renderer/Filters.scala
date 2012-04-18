@@ -16,8 +16,6 @@
 package toolxit.bibtex
 package renderer
 
-import tree._
-
 sealed trait Filter {
   /** Does the given entry match this filter? */
   def matches_?(entry: BibEntry): Boolean

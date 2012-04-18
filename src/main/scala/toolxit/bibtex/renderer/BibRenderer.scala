@@ -16,8 +16,6 @@
 package toolxit.bibtex
 package renderer
 
-import tree._
-
 /**
  * This renderer simply returns the BibTeX representation of the database,
  * with filtering, sorting and grouping. This may be useful for extracting

@@ -16,8 +16,6 @@
 package toolxit.bibtex
 package renderer
 
-import tree._
-
 /**
  * This renderer produces a plain text version of the BibTeX database.
  *

@@ -16,10 +16,8 @@
 package toolxit.bibtex
 package renderer
 
-import tree._
-
 /**
- * Mixin this trait to have a BibTeXRenderer that renders all the entries in
+ * Mix-in this trait to have a BibTeXRenderer that renders all the entries in
  * the same way.
  *
  * @author Lucas Satabin

@@ -16,7 +16,6 @@
 package toolxit.bibtex
 package renderer
 
-import tree._
 import scala.xml._
 
 /**

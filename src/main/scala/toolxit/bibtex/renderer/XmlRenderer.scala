@@ -17,7 +17,6 @@ package toolxit.bibtex
 package renderer
 
 import scala.xml.Node
-import tree.BibTeXDatabase
 
 /**
  * @author Lucas Satabin

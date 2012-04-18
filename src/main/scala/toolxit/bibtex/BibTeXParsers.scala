@@ -15,7 +15,6 @@
 */
 package toolxit.bibtex
 
-import tree._
 import scala.util.parsing.combinator.RegexParsers
 
 /**
