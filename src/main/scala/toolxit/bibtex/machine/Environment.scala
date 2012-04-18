@@ -20,6 +20,8 @@ import scala.collection.mutable.{ Map, ListBuffer }
 import scala.util.DynamicVariable
 
 /**
+ * This trait provides an environment to a machine.
+ *
  * @author Lucas Satabin
  *
  */
