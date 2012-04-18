@@ -20,6 +20,8 @@ import scala.util.parsing.combinator.RegexParsers
 /**
  *
  * A collection of parsers to parse BibTeX files.
+ * This is a strict parser, there is no recovery on error if the BibTeX
+ * file is not syntactically correct.
  *
  * @author Lucas Satabin
  *
@@ -29,6 +31,13 @@ object BibTeXParsers extends RegexParsers {
   // extends the whiteSpace value to handle comments
   protected override val whiteSpace = "(\\s|%.*)+".r
 
+  /**
+   * A .bib file consists in a list of:
+   *  - string declarations
+   *  - preamble declarations
+   *  - comments (ignored)
+   *  - bib entries
+   */
   lazy val bibFile: Parser[BibTeXDatabase] = {
     rep(positioned(string | preamble | comment ^^^ null | entry))
   } ^^ { entries =>
@@ -119,7 +128,7 @@ object BibTeXParsers extends RegexParsers {
 
   private var depth = 0
 
-  // do not skip whitespaces in a block
+  // do not skip white spaces in a block
   override def skipWhitespace = depth == 0
 
   def andAction[T](after: => Unit)(p: => Parser[T]) =
