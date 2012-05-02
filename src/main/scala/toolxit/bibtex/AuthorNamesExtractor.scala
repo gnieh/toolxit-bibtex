@@ -48,4 +48,10 @@ object AuthorNamesExtractor extends StringUtils.StringParser {
     }
   }
 
+  def authorNb(authors: String) =
+    parseAll(names, authors) match {
+      case Success(res, _) => TSome(res.size)
+      case failure => TError(failure.toString)
+    }
+
 }

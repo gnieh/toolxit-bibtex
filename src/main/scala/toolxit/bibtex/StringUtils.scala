@@ -64,7 +64,7 @@ object StringUtils {
           | "\\s".r ^^ (s => CharacterLetter(s.charAt(0)))) <~ "}" ^^ BlockLetter
 
     lazy val special: Parser[SpecialLetter] =
-      "{\\" ~> "'|\"|´|`|\\^|~|[^\\s{}'\"´`^~]+".r ~
+      "{\\" ~> ("'|\"|´|`|\\^|~|[^\\s{}'\"´`^~]+".r <~ "\\s*".r) ~
         opt(block ^^ (s => (true, s.parts.mkString))
           | ("\\s*[^{}\\s]+\\s*".r ^^ (s => (false, s.trim)))) <~ "}" ^^ {
           case spec ~ Some((braces, char)) => SpecialLetter(spec, Some(char), braces)
@@ -97,12 +97,16 @@ object StringUtils {
 
 }
 
-sealed trait PseudoLetter
+sealed trait PseudoLetter {
+  val whitespace_? : Boolean
+}
 final case class CharacterLetter(char: Char) extends PseudoLetter {
   override def toString = char.toString
+  val whitespace_? = char.toString.matches("\\s+")
 }
 final case class BlockLetter(parts: List[PseudoLetter]) extends PseudoLetter {
   override def toString = parts.mkString("{", "", "}")
+  val whitespace_? = parts.forall(_.whitespace_?)
 }
 final case class SpecialLetter(command: String, arg: Option[String], withBraces: Boolean) extends PseudoLetter {
   override def toString = {
@@ -116,6 +120,8 @@ final case class SpecialLetter(command: String, arg: Option[String], withBraces:
 
   /** Returns the UTF8 representation of this special letter if known */
   def toUTF8: Option[CharacterLetter] = SpecialCharacters(this).map(CharacterLetter)
+
+  val whitespace_? = false
 
 }
 trait Word {

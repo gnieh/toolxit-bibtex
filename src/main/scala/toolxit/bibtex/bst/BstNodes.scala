@@ -18,7 +18,7 @@ package bst
 
 import scala.util.parsing.input.Positional
 
-final case class BstFile(node: List[BstCommand])
+final case class BstFile(commands: List[BstCommand])
 
 sealed trait BstCommand extends Positional
 

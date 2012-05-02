@@ -127,6 +127,8 @@ trait Environment {
 
   // contains the currently processed entry
   protected[this] val currentEntry = new DynamicVariable[Option[BibEntry]](None)
+  // returns the current entry if any exists
+  implicit protected[this] def currentEntryValue = currentEntry.value
 
   /* resolves the value list to a concatenated string */
   protected[this] def resolve(values: List[Value]) =

@@ -17,6 +17,9 @@ package toolxit.bibtex
 package bst
 
 import java.io.Writer
+import freemarker.template._
+
+import scala.collection.mutable.Map
 
 /**
  * This class allows the user to generate a scala renderer class from
@@ -41,23 +44,45 @@ class Bst2Scala(val bst: BstFile,
 
   // ======== the rendering methods to generated ========
 
-  private[this] var renderArticle: Option[String] = None
-  private[this] var renderBook: Option[String] = None
-  private[this] var renderBooklet: Option[String] = None
-  private[this] var renderConference: Option[String] = None
-  private[this] var renderInBook: Option[String] = None
-  private[this] var renderInCollection: Option[String] = None
-  private[this] var renderInProceedings: Option[String] = None
-  private[this] var renderManual: Option[String] = None
-  private[this] var renderMasterThesis: Option[String] = None
-  private[this] var renderMisc: Option[String] = None
-  private[this] var renderPhdThesis: Option[String] = None
-  private[this] var renderProceedings: Option[String] = None
-  private[this] var renderTechReport: Option[String] = None
-  private[this] var renderUnpublished: Option[String] = None
-  private[this] var renderUnknown: Option[String] = None
+  private[this] var renderArticle: List[String] = Nil
+  private[this] var renderBook: List[String] = Nil
+  private[this] var renderBooklet: List[String] = Nil
+  private[this] var renderConference: List[String] = Nil
+  private[this] var renderInBook: List[String] = Nil
+  private[this] var renderInCollection: List[String] = Nil
+  private[this] var renderInProceedings: List[String] = Nil
+  private[this] var renderManual: List[String] = Nil
+  private[this] var renderMasterThesis: List[String] = Nil
+  private[this] var renderMisc: List[String] = Nil
+  private[this] var renderPhdThesis: List[String] = Nil
+  private[this] var renderProceedings: List[String] = Nil
+  private[this] var renderTechReport: List[String] = Nil
+  private[this] var renderUnpublished: List[String] = Nil
+  private[this] var renderUnknown: List[String] = Nil
 
   // ======== the group rendering method to generate ========
-  private[this] val render: Option[String] = None
+  private[this] val render: List[String] = Nil
+
+  // ======== the template to fill-in ========
+  private[this] lazy val template = {
+    val cfg = new Configuration
+    cfg.setClassForTemplateLoading(this.getClass, "/")
+    cfg.setObjectWrapper(new DefaultObjectWrapper)
+    cfg.getTemplate("toolxit/bibtex/bst/BstRenderer.template")
+  }
+
+  def translate(bstFile: BstFile) = {
+
+    val values = Map.empty[String, Any]
+
+    bstFile.commands.foreach {
+      case BstEntry(fields, integers, strings) =>
+        values("fields") = fields
+        values("ints") = integers
+        values("strings") = strings
+      case BstExecute(name) =>
+
+    }
+  }
 
 }

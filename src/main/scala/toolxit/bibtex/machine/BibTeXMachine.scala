@@ -37,7 +37,7 @@ class BibTeXMachine(auxReader: Reader,
                     output: Writer)
     extends Environment
     with StackMachine
-    with BuiltIn
+    with BuiltIn[Unit]
     with Logging {
 
   // the output buffer
@@ -61,6 +61,16 @@ class BibTeXMachine(auxReader: Reader,
     "unpublished",
     // this one is added to handle unknown entry types
     "default.type")
+
+  val renderingFunction: String => TOption[BibEntry => Unit] = {
+    case name if functions.contains(name) =>
+      TSome(entry => execute(functions(entry.name).instr))
+    case _ if functions.contains("default.type") =>
+      TSome(_ => execute(functions("default.type").instr))
+    case name =>
+      logger.warn("No `default.type', cannot render entry type: " + name)
+      TNone
+  }
 
   lazy val bstfile = try {
     BstParsers.parseAll(BstParsers.bstfile, bstReader) match {
@@ -368,20 +378,11 @@ class BibTeXMachine(auxReader: Reader,
             push(NullStringValue)
         }
       case BstCallType =>
-        currentEntry.value match {
-          case Some(entry) =>
-            functions.get(entry.name) match {
-              case Some(FunctionVariable(instr)) =>
-                execute(instr)
-              case _ if functions.contains("default.type") =>
-                execute(functions("default.type").instr)
-              case _ =>
-                throw BibTeXException("Unable to run .bst file",
-                  List("Unknown entry type: " + entry.name))
-            }
-          case None =>
-            throw BibTeXException("Unable to run .bst file",
-              List("No current entry exists"))
+        callType$ match {
+          case TSome(fun) =>
+            fun(currentEntry.value.get)
+          case TError(msg, _) =>
+          case TNone => // do nothing
         }
       case BstChangeCase =>
         (popString, popString) match {
@@ -399,6 +400,7 @@ class BibTeXMachine(auxReader: Reader,
             push(second)
           case _ =>
             // error, push null string
+            logger.warn("There were not two strings on top of the stack. Unable to change case")
             push(NullStringValue)
         }
       case BstChrToInt =>
@@ -410,18 +412,23 @@ class BibTeXMachine(auxReader: Reader,
             push(0)
         }
       case BstCite =>
-        currentEntry.value match {
-          case Some(entry) =>
-            push(entry.key)
-          case None =>
-          // TODO error
+        cite$ match {
+          case TSome(key) =>
+            push(key)
+          case TError(msg, _) =>
+            logger.warn(msg)
+            push(NullStringValue)
+          case TNone =>
+            //shall not happen
+            throw new RuntimeException("Case should not happen")
         }
       case BstDuplicate =>
         pop match {
           case Some(v) =>
             push(v)
             push(v)
-          case None => // TODO Error
+          case None =>
+            logger.warn("The stack was empty, nothing to duplicate")
         }
       case BstEmpty =>
         pop match {
@@ -434,17 +441,20 @@ class BibTeXMachine(auxReader: Reader,
       case BstFormatName =>
         (popString, popInt, popString) match {
           case (Some(pattern), Some(authorNb), Some(authorList)) =>
-            val list = AuthorNamesExtractor.toList(authorList)
-            if (list.size > authorNb) {
-              // TODO: improve by caching the format for each pattern
-              val formatter = new NameFormatter(pattern)
-              push(formatter(list(authorNb)))
-            } else {
-              // wrong format, push null string
-              push(NullStringValue)
+            formatName$(pattern, authorNb, authorList) match {
+              case TSome(s) => push(s)
+              case TError(msg, e) =>
+                // error, push null string
+                logger.warn(msg, e)
+                push(NullStringValue)
+              case TNone =>
+                //shall not happen
+                throw new RuntimeException("Case should not happen")
             }
-          case _ =>
+          case tuple =>
             // error, push null string value
+            logger.warn("There were not a string, an integer and a string on top of the stack. We found: "
+              + tuple)
             push(NullStringValue)
         }
       case BstIf =>
@@ -454,20 +464,26 @@ class BibTeXMachine(auxReader: Reader,
               execute(thenFun)
             else
               execute(elseFun)
-          case _ => // do nothing
+          case tuple =>
+            logger.warn("There were two functions and an integer on top of the stack. We found: "
+              + tuple)
         }
       case BstIntToChr =>
         popInt match {
           case Some(char) =>
             push(char.toChar.toString)
-          case _ => //error, push null string
+          case value =>
+            // error, push null string
+            logger.warn("There was no integer on top of the stack to execute function `int.to.chr$'. We found: " + value)
             push(NullStringValue)
         }
       case BstIntToStr =>
         popInt match {
           case Some(char) =>
             push(char.toString)
-          case _ => //error, push null string
+          case value =>
+            // error, push null string
+            logger.warn("There was no integer on top of the stack to execute function `int.to.str$'. We found: " + value)
             push(NullStringValue)
         }
       case BstMissing =>
@@ -488,8 +504,18 @@ class BibTeXMachine(auxReader: Reader,
       case BstNumNames =>
         popString match {
           case Some(names) =>
-            push(AuthorNamesExtractor.toList(names).size)
-          case _ => // error, push 0
+            numNames$(names) match {
+              case TSome(num) => push(num)
+              case TError(msg, _) =>
+                logger.warn("Wrongly formatted author list:\n" + msg)
+                push(0)
+              case TNone =>
+                //shall not happen
+                throw new RuntimeException("Case should not happen")
+            }
+          case _ =>
+            // error, push 0
+            logger.warn("There was no string on top of the stack")
             push(0)
         }
       case BstPop =>
@@ -500,9 +526,17 @@ class BibTeXMachine(auxReader: Reader,
       case BstPurify =>
         popString match {
           case Some(str) =>
-            push(purify(str))
+            purify$(str) match {
+              case TSome(res) => push(res)
+              case TError(msg, _) =>
+                logger.warn("Failed to execute purify$:\n" + msg)
+              case TNone =>
+                //shall not happen
+                throw new RuntimeException("Case should not happen")
+            }
           case _ =>
             // error, push the null string
+            logger.warn("There was no string on top of the stack")
             push(NullStringValue)
         }
       case BstQuote =>
@@ -595,8 +629,22 @@ class BibTeXMachine(auxReader: Reader,
           case _ => // do nothing
         }
       case BstWidth =>
-        // TODO implement
-        throw new Exception("Width not implemented yet…")
+        popString match {
+          case Some(str) => width$(str) match {
+            case TSome(res) => push(res)
+            case TError(msg, err) =>
+              // error, push 0
+              logger.warn(msg, err)
+              push(0)
+            case TNone =>
+              //shall not happen
+              throw new RuntimeException("Case should not happen")
+          }
+          case _ =>
+            // error, push 0
+            logger.warn("There was no string on top of the stack")
+            push(0)
+        }
       case BstWrite =>
         popString match {
           case Some(str) =>
