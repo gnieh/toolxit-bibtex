@@ -16,6 +16,26 @@
 package toolxit.bibtex
 package bst
 
+import scala.language.experimental.macros
+import scala.reflect.macros.Context
+
+// from http://stackoverflow.com/a/16591277/470341
+object OctalLiterals {
+  implicit class OctallerContext(sc: StringContext) {
+    def o(): Int = macro oImpl
+  }
+
+  def oImpl(c: Context)(): c.Expr[Int] = {
+    import c.universe._
+
+    c.literal(c.prefix.tree match {
+      case Apply(_, Apply(_, Literal(Constant(oct: String)) :: Nil) :: Nil) ⇒
+        Integer.decode("0" + oct)
+      case _ ⇒ c.abort(c.enclosingPosition, "Invalid octal literal.")
+    })
+  }
+}
+
 /**
  * This trait offers a collection of built-in bst functions translated into Scala.
  *
@@ -24,106 +44,108 @@ package bst
  */
 trait BuiltIn[Rendered] {
 
+  import OctalLiterals._
+
   private val formatters = scala.collection.mutable.Map.empty[String, NameFormatter]
 
   // character width
   private lazy val widths = {
-    val res = Array.fill[Int](0200)(0)
-    res(040) = 278
-    res(041) = 278
-    res(042) = 500
-    res(043) = 833
-    res(044) = 500
-    res(045) = 833
-    res(046) = 778
-    res(047) = 278
-    res(050) = 389
-    res(051) = 389
-    res(052) = 500
-    res(053) = 778
-    res(054) = 278
-    res(055) = 333
-    res(056) = 278
-    res(057) = 500
-    res(060) = 500
-    res(061) = 500
-    res(062) = 500
-    res(063) = 500
-    res(064) = 500
-    res(065) = 500
-    res(066) = 500
-    res(067) = 500
-    res(070) = 500
-    res(071) = 500
-    res(072) = 278
-    res(073) = 278
-    res(074) = 278
-    res(075) = 778
-    res(076) = 472
-    res(077) = 472
-    res(0100) = 778
-    res(0101) = 750
-    res(0102) = 708
-    res(0103) = 722
-    res(0104) = 764
-    res(0105) = 681
-    res(0106) = 653
-    res(0107) = 785
-    res(0110) = 750
-    res(0111) = 361
-    res(0112) = 514
-    res(0113) = 778
-    res(0114) = 625
-    res(0115) = 917
-    res(0116) = 750
-    res(0117) = 778
-    res(0120) = 681
-    res(0121) = 778
-    res(0122) = 736
-    res(0123) = 556
-    res(0124) = 722
-    res(0125) = 750
-    res(0126) = 750
-    res(0127) = 1028
-    res(0130) = 750
-    res(0131) = 750
-    res(0132) = 611
-    res(0133) = 278
-    res(0134) = 500
-    res(0135) = 278
-    res(0136) = 500
-    res(0137) = 278
-    res(0140) = 278
-    res(0141) = 500
-    res(0142) = 556
-    res(0143) = 444
-    res(0144) = 556
-    res(0145) = 444
-    res(0146) = 306
-    res(0147) = 500
-    res(0150) = 556
-    res(0151) = 278
-    res(0152) = 306
-    res(0153) = 528
-    res(0154) = 278
-    res(0155) = 833
-    res(0156) = 556
-    res(0157) = 500
-    res(0160) = 556
-    res(0161) = 528
-    res(0162) = 392
-    res(0163) = 394
-    res(0164) = 389
-    res(0165) = 556
-    res(0166) = 528
-    res(0167) = 722
-    res(0170) = 528
-    res(0171) = 528
-    res(0172) = 444
-    res(0173) = 500
-    res(0174) = 1000
-    res(0175) = 500
-    res(0176) = 500
+    val res = Array.fill[Int](o"200")(0)
+    res(o"40") = 278
+    res(o"41") = 278
+    res(o"42") = 500
+    res(o"43") = 833
+    res(o"44") = 500
+    res(o"45") = 833
+    res(o"46") = 778
+    res(o"47") = 278
+    res(o"50") = 389
+    res(o"51") = 389
+    res(o"52") = 500
+    res(o"53") = 778
+    res(o"54") = 278
+    res(o"55") = 333
+    res(o"56") = 278
+    res(o"57") = 500
+    res(o"60") = 500
+    res(o"61") = 500
+    res(o"62") = 500
+    res(o"63") = 500
+    res(o"64") = 500
+    res(o"65") = 500
+    res(o"66") = 500
+    res(o"67") = 500
+    res(o"70") = 500
+    res(o"71") = 500
+    res(o"72") = 278
+    res(o"73") = 278
+    res(o"74") = 278
+    res(o"75") = 778
+    res(o"76") = 472
+    res(o"77") = 472
+    res(o"100") = 778
+    res(o"101") = 750
+    res(o"102") = 708
+    res(o"103") = 722
+    res(o"104") = 764
+    res(o"105") = 681
+    res(o"106") = 653
+    res(o"107") = 785
+    res(o"110") = 750
+    res(o"111") = 361
+    res(o"112") = 514
+    res(o"113") = 778
+    res(o"114") = 625
+    res(o"115") = 917
+    res(o"116") = 750
+    res(o"117") = 778
+    res(o"120") = 681
+    res(o"121") = 778
+    res(o"122") = 736
+    res(o"123") = 556
+    res(o"124") = 722
+    res(o"125") = 750
+    res(o"126") = 750
+    res(o"127") = 1028
+    res(o"130") = 750
+    res(o"131") = 750
+    res(o"132") = 611
+    res(o"133") = 278
+    res(o"134") = 500
+    res(o"135") = 278
+    res(o"136") = 500
+    res(o"137") = 278
+    res(o"140") = 278
+    res(o"141") = 500
+    res(o"142") = 556
+    res(o"143") = 444
+    res(o"144") = 556
+    res(o"145") = 444
+    res(o"146") = 306
+    res(o"147") = 500
+    res(o"150") = 556
+    res(o"151") = 278
+    res(o"152") = 306
+    res(o"153") = 528
+    res(o"154") = 278
+    res(o"155") = 833
+    res(o"156") = 556
+    res(o"157") = 500
+    res(o"160") = 556
+    res(o"161") = 528
+    res(o"162") = 392
+    res(o"163") = 394
+    res(o"164") = 389
+    res(o"165") = 556
+    res(o"166") = 528
+    res(o"167") = 722
+    res(o"170") = 528
+    res(o"171") = 528
+    res(o"172") = 444
+    res(o"173") = 500
+    res(o"174") = 1000
+    res(o"175") = 500
+    res(o"176") = 500
     res
   }
 
@@ -131,7 +153,7 @@ trait BuiltIn[Rendered] {
    * a function that, given an entry name, returns the rendering function
    * if any. Returns `None' if none found.
    */
-  val renderingFunction: String => TOption[BibEntry => Rendered]
+  val renderingFunction: String ⇒ TOption[BibEntry ⇒ Rendered]
 
   /**
    * Adds a ‘.’ to it if the last non‘}’ character isn’t a ‘.’, ‘?’, or ‘!’,
@@ -157,11 +179,11 @@ trait BuiltIn[Rendered] {
    *
    * In this case, it calls the `render*' method
    */
-  def callType$(implicit entry: Option[BibEntry]): TOption[BibEntry => Rendered] =
+  def callType$(implicit entry: Option[BibEntry]): TOption[BibEntry ⇒ Rendered] =
     entry match {
-      case Some(e) =>
+      case Some(e) ⇒
         renderingFunction(e.name)
-      case None =>
+      case None ⇒
         TError("There is no current entry, unable to execute the `call.type$' function")
     }
 
@@ -186,9 +208,9 @@ trait BuiltIn[Rendered] {
    */
   def cite$(implicit entry: Option[BibEntry]): TOption[String] =
     entry match {
-      case Some(e) =>
+      case Some(e) ⇒
         TSome(e.key)
-      case None =>
+      case None ⇒
         TError("There is no current entry, unable to execute the `cite$' function")
     }
 
@@ -206,11 +228,13 @@ trait BuiltIn[Rendered] {
         val formatter = formatters.getOrElseUpdate(pattern, new NameFormatter(pattern))
         // returns the formatted name
         TSome(formatter(list(authorNb)))
-      } catch {
-        case e: Exception =>
+      }
+      catch {
+        case e: Exception ⇒
           TError("Unable to call `format,name$' function:\n", e)
       }
-    } else {
+    }
+    else {
       // author does not exist
       TError(authorNb + "-th author does not exist in {" + authorList + "}")
     }
@@ -222,45 +246,45 @@ trait BuiltIn[Rendered] {
   def purify$(s: String) = {
 
     def purifyWord(word: Word): String =
-      word.letters.foldLeft("") { (result, current) =>
+      word.letters.foldLeft("") { (result, current) ⇒
         val purified = current match {
-          case CharacterLetter(c) if c.isLetterOrDigit => c
-          case CharacterLetter('-') => " "
-          case CharacterLetter('~') => " "
-          case SpecialLetter(_, Some(arg), false) => arg
-          case BlockLetter(parts) => purifyWord(SimpleWord(parts))
-          case _ => ""
+          case CharacterLetter(c) if c.isLetterOrDigit ⇒ c
+          case CharacterLetter('-')                    ⇒ " "
+          case CharacterLetter('~')                    ⇒ " "
+          case SpecialLetter(_, Some(arg), false)      ⇒ arg
+          case BlockLetter(parts)                      ⇒ purifyWord(SimpleWord(parts))
+          case _                                       ⇒ ""
         }
         result + purified
       }
 
     import StringUtils.StringParser
     StringParser.parseAll(StringParser.string, s) match {
-      case StringParser.Success(res, _) =>
+      case StringParser.Success(res, _) ⇒
         TSome(res.map(purifyWord _).mkString(" "))
-      case fail =>
+      case fail ⇒
         TError(fail.toString)
     }
   }
 
   def width$(s: String) = {
     def charWidth(c: Char) =
-      if (c >= 0 && c < 0200)
+      if (c >= 0 && c < o"200")
         widths(c)
       else 0
 
     def letterWidth(l: PseudoLetter): Int = l match {
-      case CharacterLetter(c) => charWidth(c)
-      case BlockLetter(parts) =>
+      case CharacterLetter(c) ⇒ charWidth(c)
+      case BlockLetter(parts) ⇒
         parts.map(letterWidth _).sum // does not take braces into account
-      case SpecialLetter("oe", _, _) => 778
-      case SpecialLetter("OE", _, _) => 1014
-      case SpecialLetter("ae", _, _) => 722
-      case SpecialLetter("AE", _, _) => 903
-      case SpecialLetter("ss", _, _) => 500
-      case SpecialLetter(command, arg, _) if command(0).isLetter =>
+      case SpecialLetter("oe", _, _) ⇒ 778
+      case SpecialLetter("OE", _, _) ⇒ 1014
+      case SpecialLetter("ae", _, _) ⇒ 722
+      case SpecialLetter("AE", _, _) ⇒ 903
+      case SpecialLetter("ss", _, _) ⇒ 500
+      case SpecialLetter(command, arg, _) if command(0).isLetter ⇒
         charWidth(command(0)) + arg.map(_.map(charWidth _).sum).getOrElse(0)
-      case SpecialLetter(_, arg, _) =>
+      case SpecialLetter(_, arg, _) ⇒
         arg.map(_.map(charWidth _).sum).getOrElse(0)
     }
 
@@ -269,11 +293,11 @@ trait BuiltIn[Rendered] {
 
     import StringUtils.StringParser
     StringParser.parseAll(StringParser.string, s) match {
-      case StringParser.Success(res, _) =>
-        TSome(res.foldLeft(0) { (result, current) =>
+      case StringParser.Success(res, _) ⇒
+        TSome(res.foldLeft(0) { (result, current) ⇒
           result + wordWidth(current)
         })
-      case fail =>
+      case fail ⇒
         TError(fail.toString)
     }
 
