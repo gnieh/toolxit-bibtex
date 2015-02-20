@@ -20,7 +20,7 @@ import bst._
 import scala.util.DynamicVariable
 import scala.collection.mutable.{ Map, Stack, ListBuffer, StringBuilder }
 import java.io.{ Reader, Writer }
-import com.weiglewilczek.slf4s.Logging
+import java.util.logging.{ Logger ⇒ JLogger, Level }
 
 case class BibTeXException(msg: String, errors: List[String]) extends Exception(msg)
 
@@ -37,8 +37,9 @@ class BibTeXMachine(auxReader: Reader,
                     output: Writer)
     extends Environment
     with StackMachine
-    with BuiltIn[Unit]
-    with Logging {
+    with BuiltIn[Unit] {
+
+  lazy val logger = JLogger.getLogger(this.getClass.getName)
 
   // the output buffer
   private val buffer = new StringBuilder
@@ -62,28 +63,30 @@ class BibTeXMachine(auxReader: Reader,
     // this one is added to handle unknown entry types
     "default.type")
 
-  val renderingFunction: String => TOption[BibEntry => Unit] = {
-    case name if functions.contains(name) =>
-      TSome(entry => execute(functions(entry.name).instr))
-    case _ if functions.contains("default.type") =>
-      TSome(_ => execute(functions("default.type").instr))
-    case name =>
-      logger.warn("No `default.type', cannot render entry type: " + name)
+  val renderingFunction: String ⇒ TOption[BibEntry ⇒ Unit] = {
+    case name if functions.contains(name) ⇒
+      TSome(entry ⇒ execute(functions(entry.name).instr))
+    case _ if functions.contains("default.type") ⇒
+      TSome(_ ⇒ execute(functions("default.type").instr))
+    case name ⇒
+      logger.warning("No `default.type', cannot render entry type: " + name)
       TNone
   }
 
   lazy val bstfile = try {
     BstParsers.parseAll(BstParsers.bstfile, bstReader) match {
-      case BstParsers.Success(parsed, _) => Some(parsed)
-      case error =>
+      case BstParsers.Success(parsed, _) ⇒ Some(parsed)
+      case error ⇒
         println(error)
         None
     }
-  } catch {
-    case e: Exception =>
+  }
+  catch {
+    case e: Exception ⇒
       e.printStackTrace
       None
-  } finally {
+  }
+  finally {
     bstReader.close
   }
 
@@ -95,29 +98,33 @@ class BibTeXMachine(auxReader: Reader,
     // if a citation appears twice, only the first occurrence is kept
     val citationRegex = """\\citation\{([^}]+)\}"""
     val citations = aux.filter(_.matches(citationRegex)).distinct
-      .map(cite =>
+      .map(cite ⇒
         citationRegex.r.findFirstMatchIn(cite).get.group(1))
     Some(AuxFile(style, citations))
-  } catch {
-    case e: Exception =>
+  }
+  catch {
+    case e: Exception ⇒
       e.printStackTrace
       None
-  } finally {
+  }
+  finally {
     auxReader.close
   }
 
   lazy val bibfile = try {
     BibTeXParsers.parseAll(BibTeXParsers.bibFile, bibReader) match {
-      case BibTeXParsers.Success(parsed, _) => Some(parsed)
-      case error =>
+      case BibTeXParsers.Success(parsed, _) ⇒ Some(parsed)
+      case error ⇒
         println(error)
         None
     }
-  } catch {
-    case e: Exception =>
+  }
+  catch {
+    case e: Exception ⇒
       e.printStackTrace
       None
-  } finally {
+  }
+  finally {
     bibReader.close
   }
 
@@ -135,12 +142,12 @@ class BibTeXMachine(auxReader: Reader,
 
     // read the .bst file
     bstfile match {
-      case Some(BstFile(commands)) =>
+      case Some(BstFile(commands)) ⇒
         // perform checks on the commands
         check(commands)
         // execute the commands in the file
         execute(commands)
-      case _ => // do nothing
+      case _ ⇒ // do nothing
     }
 
   }
@@ -161,7 +168,7 @@ class BibTeXMachine(auxReader: Reader,
     var errors = List[String]()
 
     commands.foreach {
-      case BstEntry(_, _, _) =>
+      case BstEntry(_, _, _) ⇒
         // only one ENTRY command
         if (entrySeen)
           errors ::= "Duplicated ENTRY command"
@@ -170,12 +177,12 @@ class BibTeXMachine(auxReader: Reader,
         // ENTRY must precede READ
         if (readSeen)
           errors ::= "ENTRY command must precede READ command"
-      case BstMacro(_, _) if readSeen =>
+      case BstMacro(_, _) if readSeen ⇒
         // MACRO must precede READ
         errors ::= "MACRO commands must precede READ command"
-      case BstFunction(name, _) if standardTypes.contains(name) =>
+      case BstFunction(name, _) if standardTypes.contains(name) ⇒
         standards += name
-      case BstRead =>
+      case BstRead ⇒
         // only one READ command
         if (readSeen)
           errors ::= "Duplicated READ command"
@@ -186,15 +193,15 @@ class BibTeXMachine(auxReader: Reader,
         if (missing.nonEmpty)
           errors ::=
             "Standard types must be defined before the READ command. Missing standards types: " + missing.mkString(", ")
-      case BstExecute(_) if !readSeen =>
+      case BstExecute(_) if !readSeen ⇒
         errors ::= "The READ command must precede EXECUTE command"
-      case BstIterate(_) if !readSeen =>
+      case BstIterate(_) if !readSeen ⇒
         errors ::= "The READ command must precede ITERATE command"
-      case BstReverse(_) if !readSeen =>
+      case BstReverse(_) if !readSeen ⇒
         errors ::= "The READ command must precede REVERSE command"
-      case BstSort if !readSeen =>
+      case BstSort if !readSeen ⇒
         errors ::= "The READ command must precede SORT command"
-      case _ => // all right, just go ahead
+      case _ ⇒ // all right, just go ahead
     }
 
     if (errors.nonEmpty)
@@ -204,65 +211,65 @@ class BibTeXMachine(auxReader: Reader,
 
   /* executes the commands defined in the bst input */
   private def execute(commands: List[BstCommand]): Unit = commands.foreach {
-    case BstEntry(fields, integers, strings) =>
-      fields.foreach { field =>
+    case BstEntry(fields, integers, strings) ⇒
+      fields.foreach { field ⇒
         this.fields(field) = Map()
       }
-      integers.foreach { int =>
+      integers.foreach { int ⇒
         entryVariables(int) = Map()
       }
-      fields.foreach { string =>
+      fields.foreach { string ⇒
         entryVariables(string) = Map()
       }
-    case BstExecute(fun) =>
+    case BstExecute(fun) ⇒
       functions.get(fun) match {
-        case Some(FunctionVariable(instr)) => execute(instr)
-        case None =>
+        case Some(FunctionVariable(instr)) ⇒ execute(instr)
+        case None ⇒
           throw BibTeXException("Unable to run .bst file",
             List("FUNCTION " + fun + " is not declared before it is called"))
       }
-    case BstFunction(name, instr) =>
+    case BstFunction(name, instr) ⇒
       functions(name) = FunctionVariable(instr)
-    case BstIntegers(names) =>
-      names.foreach { name =>
+    case BstIntegers(names) ⇒
+      names.foreach { name ⇒
         globalVariables(name) = IntVariable()
       }
-    case BstIterate(fun) =>
+    case BstIterate(fun) ⇒
       functions.get(fun) match {
-        case Some(FunctionVariable(instr)) =>
+        case Some(FunctionVariable(instr)) ⇒
           // execute the function for each entry in the entry list
-          entries.foreach { entry =>
+          entries.foreach { entry ⇒
             currentEntry.withValue(Some(entry)) {
               execute(instr)
             }
           }
-        case None =>
+        case None ⇒
           throw BibTeXException("Unable to run .bst file",
             List("FUNCTION " + fun + " is not declared before it is called"))
       }
-    case BstMacro(name, value) =>
+    case BstMacro(name, value) ⇒
       macros(name) = MacroVariable(value)
-    case BstRead =>
+    case BstRead ⇒
       // loads and reads the .bib database
       read
-    case BstReverse(fun) =>
+    case BstReverse(fun) ⇒
       functions.get(fun) match {
-        case Some(FunctionVariable(instr)) =>
+        case Some(FunctionVariable(instr)) ⇒
           // execute the function for each entry in the entry list in reverse order
-          entries.reverse.foreach { entry =>
+          entries.reverse.foreach { entry ⇒
             currentEntry.withValue(Some(entry)) {
               execute(instr)
             }
           }
-        case None =>
+        case None ⇒
           throw BibTeXException("Unable to run .bst file",
             List("FUNCTION " + fun + " is not declared before it is called"))
       }
-    case BstSort =>
+    case BstSort ⇒
       // sort the entries
       sort
-    case BstStrings(names) =>
-      names.foreach { name =>
+    case BstStrings(names) ⇒
+      names.foreach { name ⇒
         globalVariables(name) = StringVariable()
       }
   }
@@ -270,355 +277,357 @@ class BibTeXMachine(auxReader: Reader,
   /* executes the instructions of a block */
   private def execute(block: BstBlock): Unit =
     block.instructions.foreach {
-      case BstPushName(name) =>
+      case BstPushName(name) ⇒
         push(name)
-      case BstRefName(name) =>
+      case BstRefName(name) ⇒
         // lookup for the name and react accordingly
         lookup(name) match {
-          case Some(StringVariable(Some(s))) =>
+          case Some(StringVariable(Some(s))) ⇒
             push(s)
-          case Some(StringVariable(_)) =>
+          case Some(StringVariable(_)) ⇒
             push(MissingValue)
-          case Some(IntVariable(Some(i))) =>
+          case Some(IntVariable(Some(i))) ⇒
             push(i)
-          case Some(IntVariable(_)) =>
+          case Some(IntVariable(_)) ⇒
             push(MissingValue)
-          case Some(MacroVariable(m)) =>
+          case Some(MacroVariable(m)) ⇒
             push(m)
-          case Some(FunctionVariable(code)) =>
+          case Some(FunctionVariable(code)) ⇒
             // call the function
             execute(code)
-          case None =>
+          case None ⇒
             throw BibTeXException("Unable to execute .bst file",
               List("Unknown name " + name))
         }
-      case BstPushInt(i) =>
+      case BstPushInt(i) ⇒
         push(i)
-      case BstPushString(s) =>
+      case BstPushString(s) ⇒
         push(s)
-      case BstSuperior =>
+      case BstSuperior ⇒
         (popInt, popInt) match {
-          case (Some(first), Some(second)) =>
+          case (Some(first), Some(second)) ⇒
             if (second > first)
               push(1)
             else
               push(0)
-          case pair =>
+          case pair ⇒
             // error, push 0
-            logger.warn("The popped values were: " + pair + ". Unable to compare them.")
+            logger.warning("The popped values were: " + pair + ". Unable to compare them.")
             push(0)
         }
-      case BstInferior =>
+      case BstInferior ⇒
         (popInt, popInt) match {
-          case (Some(first), Some(second)) =>
+          case (Some(first), Some(second)) ⇒
             if (second < first)
               push(1)
             else
               push(0)
-          case pair =>
+          case pair ⇒
             // error, push 0
-            logger.warn("The popped values were: " + pair + ". Unable to compare them.")
+            logger.warning("The popped values were: " + pair + ". Unable to compare them.")
             push(0)
         }
-      case BstEquals =>
+      case BstEquals ⇒
         (pop, pop) match {
-          case (Some(first), Some(second)) =>
+          case (Some(first), Some(second)) ⇒
             if (second == first)
               push(1)
             else
               push(0)
-          case _ =>
+          case _ ⇒
             // error, push 0
             push(0)
         }
-      case BstPlus =>
+      case BstPlus ⇒
         (popInt, popInt) match {
-          case (Some(first), Some(second)) =>
+          case (Some(first), Some(second)) ⇒
             push(first + second)
-          case _ =>
+          case _ ⇒
             // error, push 0
             push(0)
         }
-      case BstMinus =>
+      case BstMinus ⇒
         (popInt, popInt) match {
-          case (Some(first), Some(second)) =>
+          case (Some(first), Some(second)) ⇒
             push(second - first)
-          case _ =>
+          case _ ⇒
             // error, push 0
             push(0)
         }
-      case BstMultiply =>
+      case BstMultiply ⇒
         (popString, popString) match {
-          case (Some(first), Some(second)) =>
+          case (Some(first), Some(second)) ⇒
             push(second + first)
-          case _ =>
+          case _ ⇒
             // error, push null string
             push(NullStringValue)
         }
-      case BstAssign =>
+      case BstAssign ⇒
         (popString, pop) match {
-          case (Some(name), Some(value)) if canAssign(name) =>
+          case (Some(name), Some(value)) if canAssign(name) ⇒
             assign(name, value.toVar)
-          case (Some(name), _) =>
+          case (Some(name), _) ⇒
             throw BibTeXException("Unable to run .bst file",
               List(name + " cannot be assigned"))
-          case _ =>
+          case _ ⇒
             throw BibTeXException("Unable to run .bst file",
               List("Wrong arguments on stack"))
         }
-      case block: BstBlock =>
+      case block: BstBlock ⇒
         push(FunctionValue(block))
-      case BstAddPeriod =>
+      case BstAddPeriod ⇒
         popString match {
-          case Some(s) =>
+          case Some(s) ⇒
             push(addPeriod$(s))
-          case None =>
+          case None ⇒
             // error, push null string
-            logger.warn("No string on top of the stack, impossible to invoke `add.period$'")
+            logger.warning("No string on top of the stack, impossible to invoke `add.period$'")
             push(NullStringValue)
         }
-      case BstCallType =>
+      case BstCallType ⇒
         callType$ match {
-          case TSome(fun) =>
+          case TSome(fun) ⇒
             fun(currentEntry.value.get)
-          case TError(msg, _) =>
-          case TNone => // do nothing
+          case TError(msg, _) ⇒
+          case TNone          ⇒ // do nothing
         }
-      case BstChangeCase =>
+      case BstChangeCase ⇒
         (popString, popString) match {
-          case (Some("t" | "T"), Some(second)) =>
+          case (Some("t" | "T"), Some(second)) ⇒
             // to lower case but first letters
             push(toLowerButFirst(second))
-          case (Some("l" | "L"), Some(second)) =>
+          case (Some("l" | "L"), Some(second)) ⇒
             // to lower case
             push(toLower(second))
-          case (Some("u" | "U"), Some(second)) =>
+          case (Some("u" | "U"), Some(second)) ⇒
             // to upper case
             push(toUpper(second))
-          case (Some(_), Some(second)) =>
+          case (Some(_), Some(second)) ⇒
             // incorrect pattern, push back the second string
             push(second)
-          case _ =>
+          case _ ⇒
             // error, push null string
-            logger.warn("There were not two strings on top of the stack. Unable to change case")
+            logger.warning("There were not two strings on top of the stack. Unable to change case")
             push(NullStringValue)
         }
-      case BstChrToInt =>
+      case BstChrToInt ⇒
         popString match {
-          case Some(s) if s.length == 1 =>
+          case Some(s) if s.length == 1 ⇒
             push(s(0))
-          case _ =>
+          case _ ⇒
             // error, push zero
             push(0)
         }
-      case BstCite =>
+      case BstCite ⇒
         cite$ match {
-          case TSome(key) =>
+          case TSome(key) ⇒
             push(key)
-          case TError(msg, _) =>
-            logger.warn(msg)
+          case TError(msg, _) ⇒
+            logger.warning(msg)
             push(NullStringValue)
-          case TNone =>
+          case TNone ⇒
             //shall not happen
             throw new RuntimeException("Case should not happen")
         }
-      case BstDuplicate =>
+      case BstDuplicate ⇒
         pop match {
-          case Some(v) =>
+          case Some(v) ⇒
             push(v)
             push(v)
-          case None =>
-            logger.warn("The stack was empty, nothing to duplicate")
+          case None ⇒
+            logger.warning("The stack was empty, nothing to duplicate")
         }
-      case BstEmpty =>
+      case BstEmpty ⇒
         pop match {
-          case Some(MissingValue | NullStringValue) =>
+          case Some(MissingValue | NullStringValue) ⇒
             push(1)
-          case Some(SStringValue(s)) if s.matches("\\s*") =>
+          case Some(SStringValue(s)) if s.matches("\\s*") ⇒
             push(1)
-          case _ => push(0)
+          case _ ⇒ push(0)
         }
-      case BstFormatName =>
+      case BstFormatName ⇒
         (popString, popInt, popString) match {
-          case (Some(pattern), Some(authorNb), Some(authorList)) =>
+          case (Some(pattern), Some(authorNb), Some(authorList)) ⇒
             formatName$(pattern, authorNb, authorList) match {
-              case TSome(s) => push(s)
-              case TError(msg, e) =>
+              case TSome(s) ⇒ push(s)
+              case TError(msg, e) ⇒
                 // error, push null string
-                logger.warn(msg, e)
+                logger.warning(msg)
+                logger.warning(e.getStackTrace.mkString("\n"))
                 push(NullStringValue)
-              case TNone =>
+              case TNone ⇒
                 //shall not happen
                 throw new RuntimeException("Case should not happen")
             }
-          case tuple =>
+          case tuple ⇒
             // error, push null string value
-            logger.warn("There were not a string, an integer and a string on top of the stack. We found: "
+            logger.warning("There were not a string, an integer and a string on top of the stack. We found: "
               + tuple)
             push(NullStringValue)
         }
-      case BstIf =>
+      case BstIf ⇒
         (popFunction, popFunction, popInt) match {
-          case (Some(elseFun), Some(thenFun), Some(cond)) =>
+          case (Some(elseFun), Some(thenFun), Some(cond)) ⇒
             if (cond > 0)
               execute(thenFun)
             else
               execute(elseFun)
-          case tuple =>
-            logger.warn("There were two functions and an integer on top of the stack. We found: "
+          case tuple ⇒
+            logger.warning("There were two functions and an integer on top of the stack. We found: "
               + tuple)
         }
-      case BstIntToChr =>
+      case BstIntToChr ⇒
         popInt match {
-          case Some(char) =>
+          case Some(char) ⇒
             push(char.toChar.toString)
-          case value =>
+          case value ⇒
             // error, push null string
-            logger.warn("There was no integer on top of the stack to execute function `int.to.chr$'. We found: " + value)
+            logger.warning("There was no integer on top of the stack to execute function `int.to.chr$'. We found: " + value)
             push(NullStringValue)
         }
-      case BstIntToStr =>
+      case BstIntToStr ⇒
         popInt match {
-          case Some(char) =>
+          case Some(char) ⇒
             push(char.toString)
-          case value =>
+          case value ⇒
             // error, push null string
-            logger.warn("There was no integer on top of the stack to execute function `int.to.str$'. We found: " + value)
+            logger.warning("There was no integer on top of the stack to execute function `int.to.str$'. We found: " + value)
             push(NullStringValue)
         }
-      case BstMissing =>
+      case BstMissing ⇒
         pop match {
-          case Some(MissingValue) => push(1)
-          case _ => push(0)
+          case Some(MissingValue) ⇒ push(1)
+          case _                  ⇒ push(0)
         }
-      case BstNewline =>
+      case BstNewline ⇒
         if (buffer.isEmpty) {
           output.write("\n")
-        } else {
+        }
+        else {
           // flush the buffer to the file
           output.write(buffer.toString)
           output.flush
           // empty the buffer
           buffer.clear
         }
-      case BstNumNames =>
+      case BstNumNames ⇒
         popString match {
-          case Some(names) =>
+          case Some(names) ⇒
             numNames$(names) match {
-              case TSome(num) => push(num)
-              case TError(msg, _) =>
-                logger.warn("Wrongly formatted author list:\n" + msg)
+              case TSome(num) ⇒ push(num)
+              case TError(msg, _) ⇒
+                logger.warning("Wrongly formatted author list:\n" + msg)
                 push(0)
-              case TNone =>
+              case TNone ⇒
                 //shall not happen
                 throw new RuntimeException("Case should not happen")
             }
-          case _ =>
+          case _ ⇒
             // error, push 0
-            logger.warn("There was no string on top of the stack")
+            logger.warning("There was no string on top of the stack")
             push(0)
         }
-      case BstPop =>
+      case BstPop ⇒
         // pop literal if any
         pop
-      case BstPreamble =>
+      case BstPreamble ⇒
         push(preambles.mkString)
-      case BstPurify =>
+      case BstPurify ⇒
         popString match {
-          case Some(str) =>
+          case Some(str) ⇒
             purify$(str) match {
-              case TSome(res) => push(res)
-              case TError(msg, _) =>
-                logger.warn("Failed to execute purify$:\n" + msg)
-              case TNone =>
+              case TSome(res) ⇒ push(res)
+              case TError(msg, _) ⇒
+                logger.warning("Failed to execute purify$:\n" + msg)
+              case TNone ⇒
                 //shall not happen
                 throw new RuntimeException("Case should not happen")
             }
-          case _ =>
+          case _ ⇒
             // error, push the null string
-            logger.warn("There was no string on top of the stack")
+            logger.warning("There was no string on top of the stack")
             push(NullStringValue)
         }
-      case BstQuote =>
+      case BstQuote ⇒
         push("\"")
-      case BstSkip =>
+      case BstSkip ⇒
       // no-op
-      case BstStack =>
+      case BstStack ⇒
         println(stack.mkString("\n")) // TODO improve stack formatting
         stack.clear
-      case BstSubstring =>
+      case BstSubstring ⇒
         (popString, popInt, popInt) match {
-          case (Some(string), Some(length), Some(start)) =>
+          case (Some(string), Some(length), Some(start)) ⇒
             // first character is at position one in BibTeX
             push(string.substring(start - 1, length))
-          case _ =>
+          case _ ⇒
             // error, push null string
             push(NullStringValue)
         }
-      case BstSwap =>
+      case BstSwap ⇒
         (pop, pop) match {
-          case (Some(first), Some(second)) =>
+          case (Some(first), Some(second)) ⇒
             push(first)
             push(second)
-          case (Some(first), None) =>
+          case (Some(first), None) ⇒
             push(first) // actually, do nothing
-          case _ => // nothing was popped (empty stack), do nothing
+          case _ ⇒ // nothing was popped (empty stack), do nothing
         }
-      case BstTextLength =>
+      case BstTextLength ⇒
         popString match {
-          case Some(str) =>
+          case Some(str) ⇒
             // TODO, is this really correct according to standard BibTeX behavior?
             import StringUtils.StringParser
             StringParser.parseAll(StringParser.string, str) match {
-              case StringParser.Success(res, _) =>
-                res.foldLeft(0) { (result, current) =>
+              case StringParser.Success(res, _) ⇒
+                res.foldLeft(0) { (result, current) ⇒
                   result + current.length
                 }
-              case _ =>
+              case _ ⇒
                 // error, push 0
                 push(0)
             }
             push(StringFormatters.flatten(str).length)
-          case None =>
+          case None ⇒
             // error, push 0
             push(0)
         }
-      case BstTextPrefix =>
+      case BstTextPrefix ⇒
         (popInt, popString) match {
-          case (Some(nb), Some(str)) =>
+          case (Some(nb), Some(str)) ⇒
             import StringUtils.StringParser
             StringParser.parseAll(StringParser.string, str) match {
-              case StringParser.Success(res, _) =>
-                res.foldLeft(0) { (result, current) =>
+              case StringParser.Success(res, _) ⇒
+                res.foldLeft(0) { (result, current) ⇒
                   result + current.length
                 }
-              case _ =>
+              case _ ⇒
                 // error, push 0
                 push(0)
             }
-          case _ =>
+          case _ ⇒
             // error, push null string
             push(NullStringValue)
         }
-      case BstTop =>
+      case BstTop ⇒
         pop.foreach(println _)
-      case BstType =>
+      case BstType ⇒
         currentEntry.value match {
-          case Some(entry) =>
+          case Some(entry) ⇒
             push(entry.name)
-          case None =>
+          case None ⇒
             // error, push null string
             push(NullStringValue)
         }
-      case BstWarning =>
+      case BstWarning ⇒
         popString match {
-          case Some(str) =>
-            logger.warn(str)
-          case None => // do nothing
+          case Some(str) ⇒
+            logger.warning(str)
+          case None ⇒ // do nothing
         }
-      case BstWhile =>
+      case BstWhile ⇒
         (popFunction, popFunction) match {
-          case (Some(block), Some(cond)) =>
+          case (Some(block), Some(cond)) ⇒
             def condition = {
               execute(cond)
               popInt
@@ -626,35 +635,36 @@ class BibTeXMachine(auxReader: Reader,
             while (condition.getOrElse(0) > 0) {
               execute(block)
             }
-          case _ => // do nothing
+          case _ ⇒ // do nothing
         }
-      case BstWidth =>
+      case BstWidth ⇒
         popString match {
-          case Some(str) => width$(str) match {
-            case TSome(res) => push(res)
-            case TError(msg, err) =>
+          case Some(str) ⇒ width$(str) match {
+            case TSome(res) ⇒ push(res)
+            case TError(msg, err) ⇒
               // error, push 0
-              logger.warn(msg, err)
+              logger.warning(msg)
+              logger.warning(err.getStackTrace.mkString("\n"))
               push(0)
-            case TNone =>
+            case TNone ⇒
               //shall not happen
               throw new RuntimeException("Case should not happen")
           }
-          case _ =>
+          case _ ⇒
             // error, push 0
-            logger.warn("There was no string on top of the stack")
+            logger.warning("There was no string on top of the stack")
             push(0)
         }
-      case BstWrite =>
+      case BstWrite ⇒
         popString match {
-          case Some(str) =>
+          case Some(str) ⇒
             buffer.append(str)
             // flush the buffer to the file
             output.write(buffer.toString)
             output.flush
             // empty the buffer
             buffer.clear
-          case _ => // do nothing
+          case _ ⇒ // do nothing
         }
 
     }
@@ -662,40 +672,40 @@ class BibTeXMachine(auxReader: Reader,
   /* reads and loads the .bib database */
   private def read {
     (auxfile, bibfile) match {
-      case (Some(AuxFile(_, citations)), Some(BibTeXDatabase(entries, strings, pre))) =>
+      case (Some(AuxFile(_, citations)), Some(BibTeXDatabase(entries, strings, pre))) ⇒
 
         // read all the found entries and enrich the environment with 
         // strings and preambles, and build the map of declared entries
         // in the database
         val bibEntries = Map.empty[String, BibEntry]
         strings.foreach {
-          case StringEntry(name, StringValue(value)) =>
+          case StringEntry(name, StringValue(value)) ⇒
             macros(name) = MacroVariable(value)
-          case StringEntry(name, concat @ ConcatValue(values)) =>
+          case StringEntry(name, concat @ ConcatValue(values)) ⇒
             // resolve the values
             val resolved = resolve(values)
             concat.resolved = Some(resolved)
             // set in the environment
             macros(name) = MacroVariable(resolved)
-          case _ => // should never happen, ignore it
+          case _ ⇒ // should never happen, ignore it
         }
         pre.foreach {
-          case PreambleEntry(ConcatValue(values)) =>
+          case PreambleEntry(ConcatValue(values)) ⇒
             preambles += resolve(values)
         }
         entries.foreach {
-          case b: BibEntry =>
+          case b: BibEntry ⇒
             bibEntries(b.key) = b
         }
 
         def buildEntryList(keys: List[String]): List[BibEntry] = keys match {
-          case key :: tail =>
+          case key :: tail ⇒
             bibEntries.getOrElse(key, UnknownEntry) :: buildEntryList(tail)
-          case _ => List()
+          case _ ⇒ List()
         }
         // gets the entries from the database that are in the .aux file
         this.entries = buildEntryList(citations)
-      case _ => // TODO error
+      case _ ⇒ // TODO error
     }
   }
 
@@ -703,10 +713,10 @@ class BibTeXMachine(auxReader: Reader,
   private def sort {
     // get the sort key for each entry and set it in the entry
     entries.foreach {
-      entry =>
+      entry ⇒
         entry.sortKey = entryVariables("sort.key$").get(entry.key) match {
-          case Some(StringVariable(Some(k))) => k
-          case _ => //should never happen if style is correct
+          case Some(StringVariable(Some(k))) ⇒ k
+          case _ ⇒ //should never happen if style is correct
             throw BibTeXException("Unable to run .bst file",
               List("All entries should have defined a sort key"))
         }
