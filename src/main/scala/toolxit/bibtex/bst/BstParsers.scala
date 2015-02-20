@@ -39,7 +39,7 @@ object BstParsers extends RegexParsers {
         | function
         | integers
         | iterate
-        | macro
+        | bstmacro
         | read
         | reverse
         | sort
@@ -51,7 +51,7 @@ object BstParsers extends RegexParsers {
     ("{" ~> rep(name) <~ "}") ~
     ("{" ~> rep(name) <~ "}") ~
     ("{" ~> rep(name) <~ "}") ^^ {
-      case fields ~ integers ~ strings => BstEntry(fields, integers, strings)
+      case fields ~ integers ~ strings ⇒ BstEntry(fields, integers, strings)
     }
 
   lazy val execute: Parser[BstExecute] = "EXECUTE" ~>
@@ -60,7 +60,7 @@ object BstParsers extends RegexParsers {
   lazy val function: Parser[BstFunction] = "FUNCTION" ~>
     ("{" ~> name <~ "}") ~
     block ^^ {
-      case name ~ instr => BstFunction(name, instr)
+      case name ~ instr ⇒ BstFunction(name, instr)
     }
 
   lazy val integers: Parser[BstIntegers] = "INTEGERS" ~>
@@ -69,9 +69,9 @@ object BstParsers extends RegexParsers {
   lazy val iterate: Parser[BstIterate] = "ITERATE" ~>
     "{" ~> refName <~ "}" ^^ BstIterate
 
-  lazy val macro: Parser[BstMacro] = "MACRO" ~>
+  lazy val bstmacro: Parser[BstMacro] = "MACRO" ~>
     ("{" ~> name <~ "}") ~
-    ("{" ~> string <~ "}") ^^ { case name ~ value => BstMacro(name, value) }
+    ("{" ~> string <~ "}") ^^ { case name ~ value ⇒ BstMacro(name, value) }
 
   lazy val read: Parser[BstRead.type] = "READ" ^^^ BstRead
 
@@ -88,11 +88,11 @@ object BstParsers extends RegexParsers {
   lazy val instruction: Parser[BstInstruction] = (
     block
     | builtin
-    | """'[^\\$&#%_{}\^~\s"0-9][^\\$&#%_{}\^~\s"]*\$?""".r ^^ (s =>
+    | """'[^\\$&#%_{}\^~\s"0-9][^\\$&#%_{}\^~\s"]*\$?""".r ^^ (s ⇒
       BstPushName(s.tail.toLowerCase))
     | refName ^^ BstRefName
     | string ^^ BstPushString
-    | "#-?[0-9]+".r ^^ (i => BstPushInt(i.tail.toInt)))
+    | "#-?[0-9]+".r ^^ (i ⇒ BstPushInt(i.tail.toInt)))
 
   lazy val block: Parser[BstBlock] =
     "{" ~> rep(positioned(instruction)) <~ "}" ^^ BstBlock
