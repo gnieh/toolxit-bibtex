@@ -133,9 +133,9 @@ case object EmptyValue extends Value {
 
 final case class PreambleEntry(value: ConcatValue) extends Entry
 
-final case class BibEntry(name: String,
-                          key: String,
-                          fields: Map[String, Field]) extends Entry {
+abstract class BibtexEntry(name: String,
+                           key: String,
+                           fields: Map[String, BibtexField]) extends Entry {
   var sortKey = key
 
   def sortValue = fields.find(_._1 == sortKey).map(_._2.value).getOrElse(EmptyValue)
@@ -143,7 +143,11 @@ final case class BibEntry(name: String,
   def field(name: String): Option[Value] =
     fields.get(name).map(_.value)
 
+  def get(key: String): String = fields.get(key) match { case Some(value) ⇒ value.toString; case _ ⇒ (s"${key} unknown") }
+
   def toBibTeX = "@" + name + " {" + key + ",\n" +
     fields.values.map(_.toBibTeX).mkString("  ", ",\n  ", "\n}")
 
 }
+
+case class BibEntry(val name: String, val key: String, val fields: Map[String, Field]) extends BibtexEntry(name, key, fields)
