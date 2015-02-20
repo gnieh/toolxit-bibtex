@@ -21,12 +21,12 @@ package toolxit.bibtex
  * @author Lucas Satabin
  *
  */
-trait StringFormatter extends (String => String) {
+trait StringFormatter extends (String ⇒ String) {
   def apply(string: String): String = {
     import StringUtils.StringParser
     StringParser.parseAll(StringParser.string, string) match {
-      case StringParser.Success(res, _) => this(res).mkString(" ")
-      case _ => string
+      case StringParser.Success(res, _) ⇒ this(res).mkString(" ")
+      case _                            ⇒ string
     }
   }
   def apply(string: List[Word]): List[Word]
@@ -43,18 +43,18 @@ object StringFormatters {
   lazy val flatten = new StringFormatter {
     def apply(string: List[Word]) = {
       def removeBlock(letter: PseudoLetter): List[PseudoLetter] = letter match {
-        case BlockLetter(parts) =>
+        case BlockLetter(parts) ⇒
           parts.flatMap(removeBlock _)
-        case s: SpecialLetter if s.toUTF8.isDefined => List(s.toUTF8.get)
-        case SpecialLetter(_, Some(arg), _) => new SimpleWord(arg).letters
-        case _: SpecialLetter => Nil // unknown and no argument -> remove it...
-        case l => List(l) // otherwise just return the letter
+        case s: SpecialLetter if s.toUTF8.isDefined ⇒ List(s.toUTF8.get)
+        case SpecialLetter(_, Some(arg), _)         ⇒ new SimpleWord(arg).letters
+        case _: SpecialLetter                       ⇒ Nil // unknown and no argument -> remove it...
+        case l                                      ⇒ List(l) // otherwise just return the letter
       }
       def applyWord(word: Word): Word = word match {
-        case SimpleWord(letters) =>
+        case SimpleWord(letters) ⇒
           val res = letters.flatMap(removeBlock _)
           SimpleWord(res)
-        case ComposedWord(first, second, sep) =>
+        case ComposedWord(first, second, sep) ⇒
           ComposedWord(applyWord(first), applyWord(second), sep)
       }
       string.map(applyWord _)
@@ -65,15 +65,15 @@ object StringFormatters {
   lazy val toUpper = new StringFormatter {
     def apply(string: List[Word]) = {
       def toUpper(letter: PseudoLetter) = letter match {
-        case CharacterLetter(c) => CharacterLetter(c.toUpper)
-        case SpecialLetter(command, arg, braces) =>
+        case CharacterLetter(c) ⇒ CharacterLetter(c.toUpper)
+        case SpecialLetter(command, arg, braces) ⇒
           SpecialLetter(command, arg.map(_.toUpperCase), braces)
-        case block => block
+        case block ⇒ block
       }
       def applyWord(word: Word): Word = word match {
-        case SimpleWord(letters) =>
+        case SimpleWord(letters) ⇒
           SimpleWord(letters.map(toUpper _))
-        case ComposedWord(first, second, sep) =>
+        case ComposedWord(first, second, sep) ⇒
           ComposedWord(applyWord(first), applyWord(second), sep)
       }
       string.map(applyWord _)
@@ -84,15 +84,15 @@ object StringFormatters {
   lazy val toLower = new StringFormatter {
     def apply(string: List[Word]) = {
       def toLower(letter: PseudoLetter) = letter match {
-        case CharacterLetter(c) => CharacterLetter(c.toLower)
-        case SpecialLetter(command, arg, braces) =>
+        case CharacterLetter(c) ⇒ CharacterLetter(c.toLower)
+        case SpecialLetter(command, arg, braces) ⇒
           SpecialLetter(command, arg.map(_.toLowerCase), braces)
-        case block => block
+        case block ⇒ block
       }
       def applyWord(word: Word): Word = word match {
-        case SimpleWord(letters) =>
+        case SimpleWord(letters) ⇒
           SimpleWord(letters.map(toLower _))
-        case ComposedWord(first, second, sep) =>
+        case ComposedWord(first, second, sep) ⇒
           ComposedWord(applyWord(first), applyWord(second), sep)
       }
       string.map(applyWord _)
@@ -106,21 +106,21 @@ object StringFormatters {
   lazy val toLowerButFirst = new StringFormatter {
     def apply(string: List[Word]) = {
       def toLower(letter: PseudoLetter) = letter match {
-        case CharacterLetter(c) => CharacterLetter(c.toLower)
-        case SpecialLetter(command, arg, braces) =>
+        case CharacterLetter(c) ⇒ CharacterLetter(c.toLower)
+        case SpecialLetter(command, arg, braces) ⇒
           SpecialLetter(command, arg.map(_.toLowerCase), braces)
-        case block => block
+        case block ⇒ block
       }
       def applyWord(word: Word): Word = word match {
-        case SimpleWord(letters) =>
+        case SimpleWord(letters) ⇒
           SimpleWord(letters.map(toLower _))
-        case ComposedWord(first, second, sep) =>
+        case ComposedWord(first, second, sep) ⇒
           ComposedWord(applyWord(first), applyWord(second), sep)
       }
       def applyFirst(word: Word): Word = word match {
-        case SimpleWord(letters) =>
+        case SimpleWord(letters) ⇒
           SimpleWord(letters.head :: letters.tail.map(toLower _))
-        case ComposedWord(first, second, sep) =>
+        case ComposedWord(first, second, sep) ⇒
           ComposedWord(applyFirst(first), applyWord(second), sep)
       }
       applyFirst(string.head) :: string.tail.map(applyWord _)

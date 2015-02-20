@@ -33,7 +33,7 @@ object AuthorNameExtractor {
     lazy val firstLastParts =
       repsep(
         word, "\\s+".r) ^^ {
-          case l @ some :: tail =>
+          case l @ some :: tail ⇒
             // the lastname part contains at least the last word
             var lastname = l.last
             // remaining word, removing at least the last one which is in the lastname part
@@ -42,32 +42,32 @@ object AuthorNameExtractor {
             // word and the last one in lower case
             val (firstname, von, last) = toFirstVonLast(remaining)
             Author(firstname, von, last ++ List(lastname), Nil)
-          case _ => EmptyAuthor
+          case _ ⇒ EmptyAuthor
         }
 
     lazy val lastFirstParts =
       rep2sep(
         repsep(word, "\\s+".r),
         ",\\s*".r) ^^ {
-          case List(vonLast, jr, first) =>
+          case List(vonLast, jr, first) ⇒
             // the lastname part contains at least the last word
             var lastname = vonLast.last
             // remaining word, removing at least the last one which is in the lastname part
             val remaining = vonLast.dropRight(1)
             val (von, last) = toVonLast(remaining)
             Author(first, von, last ++ List(lastname), jr)
-          case List(vonLast, first) =>
+          case List(vonLast, first) ⇒
             // the lastname part contains at least the last word
             var lastname = vonLast.last
             // remaining word, removing at least the last one which is in the lastname part
             val remaining = vonLast.dropRight(1)
             val (von, last) = toVonLast(remaining)
             Author(first, von, last ++ List(lastname), Nil)
-          case _ => EmptyAuthor
+          case _ ⇒ EmptyAuthor
         }
 
-    def rep2sep[T, U](p: => Parser[T], s: => Parser[U]) =
-      p ~ rep1(s ~> p) ^^ { case x ~ y => x :: y }
+    def rep2sep[T, U](p: ⇒ Parser[T], s: ⇒ Parser[U]) =
+      p ~ rep1(s ~> p) ^^ { case x ~ y ⇒ x :: y }
 
   }
 
@@ -77,7 +77,7 @@ object AuthorNameExtractor {
     var last = List[Word]()
     var isFirst = true
     var hasVon = false
-    parts.foreach { part =>
+    parts.foreach { part ⇒
       if (isFirstCharacterLower(part) && last.nonEmpty) {
         hasVon = true
         isFirst = false
@@ -87,7 +87,8 @@ object AuthorNameExtractor {
           else
             last ++ List(part)
         last = Nil
-      } else if (isFirstCharacterLower(part)) {
+      }
+      else if (isFirstCharacterLower(part)) {
         hasVon = true
         isFirst = false
         von =
@@ -95,9 +96,11 @@ object AuthorNameExtractor {
             von ++ List(part)
           else
             List(part)
-      } else if (isFirst) {
+      }
+      else if (isFirst) {
         first = first ++ List(part)
-      } else {
+      }
+      else {
         last = last ++ List(part)
       }
     }
@@ -109,7 +112,7 @@ object AuthorNameExtractor {
     var last = List[Word]()
     var first = true
     var hasVon = true
-    parts.foreach { part =>
+    parts.foreach { part ⇒
       if (isFirstCharacterLower(part) && hasVon && last.nonEmpty) {
         von =
           if (von.nonEmpty)
@@ -117,13 +120,15 @@ object AuthorNameExtractor {
           else
             last ++ List(part)
         last = Nil
-      } else if (isFirstCharacterLower(part) && hasVon) {
+      }
+      else if (isFirstCharacterLower(part) && hasVon) {
         von =
           if (von.nonEmpty)
             von ++ List(part)
           else
             List(part)
-      } else {
+      }
+      else {
         if (first)
           hasVon = false
         last = last ++ List(part)
@@ -135,8 +140,8 @@ object AuthorNameExtractor {
 
   def parse(author: String) =
     NameParser.parseAll(NameParser.author, author) match {
-      case NameParser.Success(res, _) => res
-      case f => throw new Exception(f.toString)
+      case NameParser.Success(res, _) ⇒ res
+      case f                          ⇒ throw new Exception(f.toString)
     }
 
 }

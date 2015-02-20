@@ -78,9 +78,9 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase)(implicit val def
    * The result is cached for more efficiency if it is called again.
    */
   def render: Rendered = _cached match {
-    case Some(cached) =>
+    case Some(cached) ⇒
       cached
-    case _ =>
+    case _ ⇒
       val res = render(groups)
       _cached = Some(res)
       res
@@ -97,21 +97,21 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase)(implicit val def
 
   /** Renders the given single entry */
   protected[this] def render(entry: BibEntry): Rendered = entry.name match {
-    case "article" => renderArticle(entry)
-    case "book" => renderBook(entry)
-    case "booklet" => renderBooklet(entry)
-    case "conference" => renderConference(entry)
-    case "inbook" => renderInBook(entry)
-    case "incollection" => renderInCollection(entry)
-    case "inproceedings" => renderInProceedings(entry)
-    case "manual" => renderManual(entry)
-    case "masterthesis" => renderMasterThesis(entry)
-    case "misc" => renderMisc(entry)
-    case "phdthesis" => renderPhdThesis(entry)
-    case "proceedings" => renderProceedings(entry)
-    case "techreport" => renderTechReport(entry)
-    case "unpublished" => renderUnpublished(entry)
-    case _ => renderUnknown(entry)
+    case "article"       ⇒ renderArticle(entry)
+    case "book"          ⇒ renderBook(entry)
+    case "booklet"       ⇒ renderBooklet(entry)
+    case "conference"    ⇒ renderConference(entry)
+    case "inbook"        ⇒ renderInBook(entry)
+    case "incollection"  ⇒ renderInCollection(entry)
+    case "inproceedings" ⇒ renderInProceedings(entry)
+    case "manual"        ⇒ renderManual(entry)
+    case "masterthesis"  ⇒ renderMasterThesis(entry)
+    case "misc"          ⇒ renderMisc(entry)
+    case "phdthesis"     ⇒ renderPhdThesis(entry)
+    case "proceedings"   ⇒ renderProceedings(entry)
+    case "techreport"    ⇒ renderTechReport(entry)
+    case "unpublished"   ⇒ renderUnpublished(entry)
+    case _               ⇒ renderUnknown(entry)
   }
 
   /** Renders an article */
@@ -210,11 +210,11 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase)(implicit val def
       new HashMap[String, LinkedHashSet[BibEntry]] {
         def addBinding(key: String, value: BibEntry): this.type = {
           get(key) match {
-            case None =>
+            case None ⇒
               val set = new LinkedHashSet[BibEntry]
               set += value
               this(key) = set
-            case Some(set) =>
+            case Some(set) ⇒
               set += value
           }
           this
@@ -226,64 +226,65 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase)(implicit val def
 
     // enrich environment with user defined strings
     db.strings.foreach {
-      case StringEntry(name, value) =>
+      case StringEntry(name, value) ⇒
         env += (name -> value.resolve(env))
     }
 
     // create the groups of entries
     (_groupByField, _groupByType) match {
-      case (Some(name), false) =>
+      case (Some(name), false) ⇒
         db.entries.foreach {
-          case entry: BibEntry if filter.matches_?(entry) =>
+          case entry: BibEntry if filter.matches_?(entry) ⇒
             // if the entry matches the filter, add it
             val group = entry.field(name).getOrElse(EmptyValue)
             groups.addBinding(group.resolve(env), entry)
-          case _ => // do nothing
+          case _ ⇒ // do nothing
         }
-      case (None, true) =>
+      case (None, true) ⇒
         db.entries.foreach {
-          case entry: BibEntry if filter.matches_?(entry) =>
+          case entry: BibEntry if filter.matches_?(entry) ⇒
             // if the entry matches the filter, add it
             groups.addBinding(entry.name, entry)
-          case _ => // do nothing
+          case _ ⇒ // do nothing
         }
-      case _ =>
+      case _ ⇒
         db.entries.foreach {
-          case entry: BibEntry if filter.matches_?(entry) =>
+          case entry: BibEntry if filter.matches_?(entry) ⇒
             // if the entry matches the filter, add it
             groups.addBinding("Entries", entry)
-          case _ => // do nothing
+          case _ ⇒ // do nothing
         }
     }
 
     // sort elements for each group if sort field is defined
     val result = scala.collection.mutable.Map.empty[String, List[BibEntry]]
     _sortBy match {
-      case Some(field) =>
-        groups.keys.foreach { key =>
+      case Some(field) ⇒
+        groups.keys.foreach { key ⇒
           result(key) = groups(key).toList.sortBy(_.field(field).getOrElse(EmptyValue))
         }
-      case None =>
-        groups.keys.foreach { key =>
+      case None ⇒
+        groups.keys.foreach { key ⇒
           result(key) = groups(key).toList
         }
     }
 
-    result.toList.sortWith { (first, second) =>
+    result.toList.sortWith { (first, second) ⇒
       _groupDirection match {
-        case Ascending =>
+        case Ascending ⇒
           first._1 <= second._1
-        case Descending =>
+        case Descending ⇒
           first._1 >= second._1
       }
     }
   }
 
   /* The given block modifies this renderer, thus, invalidating the cache */
-  private[this] def modify(block: => Any): this.type = {
+  private[this] def modify(block: ⇒ Any): this.type = {
     try {
       block
-    } finally {
+    }
+    finally {
       _cached = None
     }
     this

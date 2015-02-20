@@ -27,13 +27,13 @@ class SimpleRenderer(db: BibTeXDatabase)
 
   protected[this] def render(groups: List[(String, List[BibEntry])]) = {
     groups.map {
-      case (key, entries) =>
+      case (key, entries) ⇒
         "====== " + key + " ======\n\n" +
           entries.map {
-            case BibEntry(name, key, fields) =>
+            case BibEntry(name, key, fields) ⇒
               "==== " + name + " (" + key + ") ====\n" +
                 fields.values.map {
-                  case Field(fname, fvalue) =>
+                  case Field(fname, fvalue) ⇒
                     "  " + fname + ": " + fvalue
                 }.mkString("\n")
           }.mkString("\n\n")
@@ -41,10 +41,10 @@ class SimpleRenderer(db: BibTeXDatabase)
   }
 
   protected[this] def renderAny(entry: BibEntry) = entry match {
-    case BibEntry(name, key, fields) =>
+    case BibEntry(name, key, fields) ⇒
       "==== " + name + " (" + key + ") ====\n" +
         fields.values.map {
-          case Field(fname, fvalue) =>
+          case Field(fname, fvalue) ⇒
             "  " + fname + ": " + fvalue
         }.mkString("\n")
   }

@@ -40,11 +40,11 @@ object BibTeXParsers extends RegexParsers {
    */
   lazy val bibFile: Parser[BibTeXDatabase] = {
     rep(positioned(string | preamble | comment ^^^ null | entry))
-  } ^^ { entries =>
+  } ^^ { entries ⇒
     val grouped = entries.filter(_ != null).groupBy {
-      case _: BibEntry => "bib"
-      case _: StringEntry => "string"
-      case _: PreambleEntry => "preamble"
+      case _: BibEntry      ⇒ "bib"
+      case _: StringEntry   ⇒ "string"
+      case _: PreambleEntry ⇒ "preamble"
     }
     BibTeXDatabase(grouped.getOrElse("bib", Nil).map(_.asInstanceOf[BibEntry]),
       grouped.getOrElse("string", Nil).map(_.asInstanceOf[StringEntry]),
@@ -53,7 +53,7 @@ object BibTeXParsers extends RegexParsers {
 
   lazy val string: Parser[StringEntry] =
     ci("@string") ~> "{" ~> (name <~ "=") ~ quoted <~ "}" ^^ {
-      case name ~ value => StringEntry(name, value)
+      case name ~ value ⇒ StringEntry(name, value)
     }
 
   lazy val preamble: Parser[PreambleEntry] =
@@ -64,13 +64,13 @@ object BibTeXParsers extends RegexParsers {
 
   lazy val entry: Parser[BibEntry] =
     ("@" ~> name <~ "{") ~ (key <~ ",") ~ repsep(positioned(field), ",") <~ opt(",") <~ "}" ^^ {
-      case name ~ key ~ fields => BibEntry(name.toLowerCase, key,
-        fields.map(f => (f.name, f)).toMap)
+      case name ~ key ~ fields ⇒ BibEntry(name.toLowerCase, key,
+        fields.map(f ⇒ (f.name, f)).toMap)
     }
 
   lazy val field: Parser[Field] =
     (name <~ "=") ~ value ^^ {
-      case n ~ v => Field(n, v)
+      case n ~ v ⇒ Field(n, v)
     }
 
   lazy val name: Parser[String] =
@@ -83,7 +83,7 @@ object BibTeXParsers extends RegexParsers {
     "[0-9]+".r |
       "{" ~> "[0-9]+".r <~ "}" |
       "\"" ~> "[0-9]+".r <~ "\""
-  } ^^ (s => IntValue(s.toInt))
+  } ^^ (s ⇒ IntValue(s.toInt))
 
   lazy val value: Parser[Value] = number | braced | concat | "[^\\s,]+".r ^^ StringValue
 
@@ -95,12 +95,12 @@ object BibTeXParsers extends RegexParsers {
 
   lazy val concat: Parser[ConcatValue] =
     concatanable ~ opt("#" ~> repsep(concatanable, "#")) ^^ {
-      case first ~ Some(next) => ConcatValue(first :: next)
-      case first ~ None => ConcatValue(List(first))
+      case first ~ Some(next) ⇒ ConcatValue(first :: next)
+      case first ~ None       ⇒ ConcatValue(List(first))
     }
 
   lazy val quoted: Parser[StringValue] =
-    enterBlock("\"") ~> rep(braced | someText) <~ leaveBlock("\"") ^^ { list =>
+    enterBlock("\"") ~> rep(braced | someText) <~ leaveBlock("\"") ^^ { list ⇒
       val (start, end) =
         if (depth == 0)
           ("", "")
@@ -112,7 +112,7 @@ object BibTeXParsers extends RegexParsers {
   lazy val braced: Parser[StringValue] =
     {
       enterBlock("{") ~> rep(braced | quoted | someText ^^ StringValue) <~ leaveBlock("}")
-    } ^^ { list =>
+    } ^^ { list ⇒
       val (start, end) =
         if (depth == 0)
           ("", "")
@@ -131,16 +131,16 @@ object BibTeXParsers extends RegexParsers {
   // do not skip white spaces in a block
   override def skipWhitespace = depth == 0
 
-  def andAction[T](after: => Unit)(p: => Parser[T]) =
-    p ^^ (res => { after; res })
+  def andAction[T](after: ⇒ Unit)(p: ⇒ Parser[T]) =
+    p ^^ (res ⇒ { after; res })
 
-  def resetDepth[T](p: => Parser[T]) =
+  def resetDepth[T](p: ⇒ Parser[T]) =
     andAction(depth = 0)(p)
 
-  def enterBlock[T](p: => Parser[T]) =
+  def enterBlock[T](p: ⇒ Parser[T]) =
     andAction(depth += 1)(p)
 
-  def leaveBlock[T](p: => Parser[T]) =
+  def leaveBlock[T](p: ⇒ Parser[T]) =
     andAction(depth -= 1)(p)
 
 }

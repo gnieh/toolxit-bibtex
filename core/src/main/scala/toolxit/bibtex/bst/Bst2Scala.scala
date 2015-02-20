@@ -76,11 +76,11 @@ class Bst2Scala(val bst: BstFile,
     val values = Map.empty[String, Any]
 
     bstFile.commands.foreach {
-      case BstEntry(fields, integers, strings) =>
+      case BstEntry(fields, integers, strings) ⇒
         values("fields") = fields
         values("ints") = integers
         values("strings") = strings
-      case BstExecute(name) =>
+      case BstExecute(name) ⇒
 
     }
   }

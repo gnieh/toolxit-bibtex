@@ -23,7 +23,7 @@ package toolxit.bibtex
  */
 sealed abstract class TOption[+A] extends Product with Serializable {
 
-  self =>
+  self ⇒
 
   def isEmpty: Boolean
 
@@ -35,23 +35,23 @@ sealed abstract class TOption[+A] extends Product with Serializable {
 
   def message: String
 
-  @inline final def getOrElse[B >: A](default: => B): B =
+  @inline final def getOrElse[B >: A](default: ⇒ B): B =
     if (isEmpty) default else this.get
 
-  @inline final def map[B](f: A => B): TOption[B] =
+  @inline final def map[B](f: A ⇒ B): TOption[B] =
     if (isError) TError(message) else if (isEmpty) TNone else TSome(f(this.get))
 
-  @inline final def flatMap[B](f: A => TOption[B]): TOption[B] =
+  @inline final def flatMap[B](f: A ⇒ TOption[B]): TOption[B] =
     if (isError) TError(message) else if (isEmpty) TNone else f(this.get)
 
-  @inline final def filter(p: A => Boolean): TOption[A] =
+  @inline final def filter(p: A ⇒ Boolean): TOption[A] =
     if (isEmpty || p(this.get)) this else TNone
 
-  @inline final def foreach[U](f: A => U) {
+  @inline final def foreach[U](f: A ⇒ U) {
     if (!isEmpty) f(this.get)
   }
 
-  @inline final def orElse[B >: A](alternative: => TOption[B]): TOption[B] =
+  @inline final def orElse[B >: A](alternative: ⇒ TOption[B]): TOption[B] =
     if (isEmpty) alternative else this
 }
 

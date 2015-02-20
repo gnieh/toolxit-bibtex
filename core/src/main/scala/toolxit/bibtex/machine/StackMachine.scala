@@ -25,7 +25,7 @@ import scala.collection.mutable.Stack
  *
  */
 trait StackMachine {
-  this: Environment =>
+  this: Environment ⇒
 
   // ==== the stack ====
   protected[this] val stack = Stack.empty[StackValue]
@@ -52,8 +52,8 @@ trait StackMachine {
       None
     else
       stack.pop match {
-        case SIntValue(i) => Some(i)
-        case _ => None
+        case SIntValue(i) ⇒ Some(i)
+        case _            ⇒ None
       }
   }
 
@@ -64,8 +64,8 @@ trait StackMachine {
       None
     else
       stack.pop match {
-        case SStringValue(s) => Some(s)
-        case _ => None
+        case SStringValue(s) ⇒ Some(s)
+        case _               ⇒ None
       }
   }
 
@@ -76,13 +76,13 @@ trait StackMachine {
       None
     else
       stack.pop match {
-        case FunctionValue(instr) =>
+        case FunctionValue(instr) ⇒
           // it is directly a block on the stack
           Some(instr)
-        case SStringValue(str) =>
+        case SStringValue(str) ⇒
           // it is a name on the stack, look if it represents a function
           functions.get(str).map(_.instr)
-        case _ => None
+        case _ ⇒ None
       }
   }
 

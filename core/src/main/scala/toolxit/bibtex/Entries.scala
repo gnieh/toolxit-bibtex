@@ -27,8 +27,8 @@ final case class BibTeXDatabase(entries: List[BibEntry],
 
   /** Finds the BibTeX entry associated to the key, if any */
   def find(key: String) = entries.find {
-    case BibEntry(_, k, _) if k == key => true
-    case _ => false
+    case BibEntry(_, k, _) if k == key ⇒ true
+    case _                             ⇒ false
   }
 
 }
@@ -45,10 +45,10 @@ sealed trait Value extends Ordered[Value] {
 }
 final case class StringValue(value: String) extends Value {
   def compare(that: Value) = that match {
-    case StringValue(s) => value.compare(s)
-    case c: ConcatValue =>
+    case StringValue(s) ⇒ value.compare(s)
+    case c: ConcatValue ⇒
       value.compare(c.resolved.getOrElse(""))
-    case _ => 1
+    case _ ⇒ 1
   }
 
   def resolve(env: Map[String, String]) = value
@@ -58,9 +58,9 @@ final case class StringValue(value: String) extends Value {
 }
 final case class IntValue(value: Int) extends Value {
   def compare(that: Value) = that match {
-    case IntValue(i) => value.compare(i)
-    case EmptyValue => 1
-    case _ => -1
+    case IntValue(i) ⇒ value.compare(i)
+    case EmptyValue  ⇒ 1
+    case _           ⇒ -1
   }
 
   def resolve(env: Map[String, String]) = value.toString
@@ -71,10 +71,10 @@ final case class IntValue(value: Int) extends Value {
 final case class ConcatValue(parts: List[Value]) extends Value {
   var resolved: Option[String] = None
   def compare(that: Value) = that match {
-    case StringValue(s) => resolved.getOrElse("").compare(s)
-    case c: ConcatValue =>
+    case StringValue(s) ⇒ resolved.getOrElse("").compare(s)
+    case c: ConcatValue ⇒
       resolved.getOrElse("").compare(c.resolved.getOrElse(""))
-    case _ => 1
+    case _ ⇒ 1
   }
 
   def resolve(env: Map[String, String]) = {
@@ -84,22 +84,22 @@ final case class ConcatValue(parts: List[Value]) extends Value {
   }
 
   override def toBibTeX = resolved match {
-    case Some(r) => "{" + r + "}"
-    case _ => parts.map(_.toBibTeX).mkString(" # ")
+    case Some(r) ⇒ "{" + r + "}"
+    case _       ⇒ parts.map(_.toBibTeX).mkString(" # ")
   }
 
   override def toString = resolved match {
-    case Some(r) => r
-    case _ => parts.mkString(" # ")
+    case Some(r) ⇒ r
+    case _       ⇒ parts.mkString(" # ")
   }
 }
 final case class NameValue(name: String) extends Value {
   var resolved: Option[String] = None
   def compare(that: Value) = that match {
-    case StringValue(s) => resolved.getOrElse("").compare(s)
-    case c: ConcatValue =>
+    case StringValue(s) ⇒ resolved.getOrElse("").compare(s)
+    case c: ConcatValue ⇒
       resolved.getOrElse("").compare(c.resolved.getOrElse(""))
-    case _ => 1
+    case _ ⇒ 1
   }
 
   def resolve(env: Map[String, String]) = {
@@ -109,20 +109,20 @@ final case class NameValue(name: String) extends Value {
   }
 
   override def toString = resolved match {
-    case Some(r) => r
-    case _ => name
+    case Some(r) ⇒ r
+    case _       ⇒ name
   }
 
   override def toBibTeX = resolved match {
-    case Some(r) => "{" + r + "}"
-    case _ => name
+    case Some(r) ⇒ "{" + r + "}"
+    case _       ⇒ name
   }
 
 }
 case object EmptyValue extends Value {
   def compare(that: Value) = that match {
-    case EmptyValue => 0
-    case _ => -1
+    case EmptyValue ⇒ 0
+    case _          ⇒ -1
   }
 
   def resolve(env: Map[String, String]) = ""

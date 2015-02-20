@@ -32,14 +32,15 @@ object AuthorNamesExtractor extends StringUtils.StringParser {
   lazy val uptoNameSep =
     guard(nameSep) ~> "" ^^^ SimpleWord(Nil) |
       rep1(block | special | not(nameSep) ~> ".|\\s".r ^^
-        (str => CharacterLetter(str.charAt(0)))) ^^ SimpleWord
+        (str ⇒ CharacterLetter(str.charAt(0)))) ^^ SimpleWord
 
   def toList(authors: String) = {
-    parseAll(names, authors).getOrElse(Nil).map { author =>
+    parseAll(names, authors).getOrElse(Nil).map { author ⇒
       try {
         AuthorNameExtractor.parse(author)
-      } catch {
-        case e: Exception =>
+      }
+      catch {
+        case e: Exception ⇒
           println("Wrong author format: " + author)
           println(e.getMessage)
           println("This author is omitted")
@@ -50,8 +51,8 @@ object AuthorNamesExtractor extends StringUtils.StringParser {
 
   def authorNb(authors: String) =
     parseAll(names, authors) match {
-      case Success(res, _) => TSome(res.size)
-      case failure => TError(failure.toString)
+      case Success(res, _) ⇒ TSome(res.size)
+      case failure         ⇒ TError(failure.toString)
     }
 
 }

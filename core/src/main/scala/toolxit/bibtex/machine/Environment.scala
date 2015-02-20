@@ -62,13 +62,16 @@ trait Environment {
         if (fields.contains(name)) {
           // it is a field
           fields(name).get(entryName)
-        } else if (entryVariables.contains(name)) {
+        }
+        else if (entryVariables.contains(name)) {
           // it is not a field, maybe an entry variable
           entryVariables(name).get(entryName)
-        } else {
+        }
+        else {
           None
         }
-      } else {
+      }
+      else {
         None
       }
 
@@ -83,7 +86,8 @@ trait Environment {
       else
         // at last lookup for a function
         functions.get(name)
-    } else {
+    }
+    else {
       result
     }
   }
@@ -96,20 +100,22 @@ trait Environment {
       val entryName = currentEntry.value.get.key
       // truncate to the entry max
       val real = value match {
-        case StringVariable(Some(s)) if s.length > entryMax.value.get =>
+        case StringVariable(Some(s)) if s.length > entryMax.value.get ⇒
           StringVariable(s.substring(0, entryMax.value.get))
-        case _ => value
+        case _ ⇒ value
       }
       entryVariables(name)(entryName) = real
-    } else if (globalVariables.contains(name)) {
+    }
+    else if (globalVariables.contains(name)) {
       // truncate to the global max
       val real = value match {
-        case StringVariable(Some(s)) if s.length > globalMax.value.get =>
+        case StringVariable(Some(s)) if s.length > globalMax.value.get ⇒
           StringVariable(s.substring(0, globalMax.value.get))
-        case _ => value
+        case _ ⇒ value
       }
       globalVariables(name) = real
-    } else {
+    }
+    else {
       throw BibTeXException("Unable to run .bst file",
         List(name + " is not declared, thus cannot be assigned"))
     }
@@ -132,15 +138,15 @@ trait Environment {
 
   /* resolves the value list to a concatenated string */
   protected[this] def resolve(values: List[Value]) =
-    values.foldLeft("") { (res, cur) =>
+    values.foldLeft("") { (res, cur) ⇒
       cur match {
-        case StringValue(value) => res + value
-        case NameValue(value) if (macros.contains(value)) =>
+        case StringValue(value) ⇒ res + value
+        case NameValue(value) if (macros.contains(value)) ⇒
           res + macros(value)
-        case NameValue(value) => res + value
-        case IntValue(value) => res + value
-        case EmptyValue => res
-        case _: ConcatValue => // should not happen!!!
+        case NameValue(value) ⇒ res + value
+        case IntValue(value)  ⇒ res + value
+        case EmptyValue       ⇒ res
+        case _: ConcatValue ⇒ // should not happen!!!
           res
       }
     }

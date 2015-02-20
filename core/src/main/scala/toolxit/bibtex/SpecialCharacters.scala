@@ -77,11 +77,11 @@ object SpecialCharacters {
     "ss" -> 'ß')
 
   def apply(special: SpecialLetter) = special match {
-    case SpecialLetter(command, Some(arg), _) =>
+    case SpecialLetter(command, Some(arg), _) ⇒
       withArg.get((command, arg))
-    case SpecialLetter(command, _, _) =>
+    case SpecialLetter(command, _, _) ⇒
       noArg.get(command)
-    case _ => None
+    case _ ⇒ None
   }
 
 }

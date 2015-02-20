@@ -137,11 +137,11 @@ class HtmlRenderer(db: BibTeXDatabase)
     <table class="result">
       <tbody>
         {
-          for ((group, entries) <- groups) yield {
+          for ((group, entries) ← groups) yield {
             <tr class="group">
               <td class="header" colspan="2">{ group }</td>
             </tr> ::
-              (for (entry <- entries)
+              (for (entry ← entries)
                 yield <tr class="bibline">
                         <td class="bibref">{ entry.key }</td>
                         <td class="bibitem">{ render(entry) }</td>
@@ -467,31 +467,31 @@ class HtmlRenderer(db: BibTeXDatabase)
     Group(List(
       <span class="bibtitle">{
         url match {
-          case Some(url) =>
+          case Some(url) ⇒
             <a href={ stringFormatter(url.toString) }>{ stringFormatter(title.toString) }</a>
-          case _ => Text(stringFormatter(title.toString))
+          case _ ⇒ Text(stringFormatter(title.toString))
         }
       }</span>,
       <span class="bibauthor">{ " (" + formatNames(author.toString) + ")" }</span>,
       {
         Group(List(
           booktitle match {
-            case Some(booktitle) =>
+            case Some(booktitle) ⇒
               <span class="bibbooktitle">{ ", \nIn " + stringFormatter(booktitle.toString) }</span>
-            case _ => Text("")
+            case _ ⇒ Text("")
           },
           publisher match {
-            case Some(publisher) =>
+            case Some(publisher) ⇒
               <span class="bibpublisher">{ ", \n" + stringFormatter(publisher.toString) }</span>
-            case _ => Text("")
+            case _ ⇒ Text("")
           },
           year match {
-            case Some(year) => Text(", \n" + stringFormatter(year.toString) + ".")
-            case _ => Text(".")
+            case Some(year) ⇒ Text(", \n" + stringFormatter(year.toString) + ".")
+            case _          ⇒ Text(".")
           },
           comment match {
-            case Some(comment) => Text(" (" + stringFormatter(comment.toString) + ")")
-            case _ => Text("")
+            case Some(comment) ⇒ Text(" (" + stringFormatter(comment.toString) + ")")
+            case _             ⇒ Text("")
           },
           <span>
             &nbsp;
@@ -506,11 +506,11 @@ class HtmlRenderer(db: BibTeXDatabase)
             }>[bib]</a>
           </span>,
           doi match {
-            case Some(doi) => <span>
-                                &nbsp;
-                                <a href={ "http://dx.doi.org/" + doi }>[doi]</a>
-                              </span>
-            case _ => Text("")
+            case Some(doi) ⇒ <span>
+                               &nbsp;
+                               <a href={ "http://dx.doi.org/" + doi }>[doi]</a>
+                             </span>
+            case _ ⇒ Text("")
           },
           <div id={ "bib:" + key } class="purebibtex" style="display:none">{ bib }</div>))
       }))

@@ -25,7 +25,7 @@ package renderer
  */
 trait UniformRenderer[Rendered] {
 
-  this: BibTeXRenderer[Rendered] =>
+  this: BibTeXRenderer[Rendered] ⇒
 
   /** Renders an article */
   override def renderArticle(entry: BibEntry) = renderAny(entry)

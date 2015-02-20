@@ -47,28 +47,28 @@ object StringUtils {
 
     lazy val composedword: Parser[ComposedWord] =
       simpleword ~ sep ~ word ^^ {
-        case first ~ sep ~ second => ComposedWord(first, second, sep)
+        case first ~ sep ~ second ⇒ ComposedWord(first, second, sep)
       }
 
     lazy val pseudoLetter: Parser[PseudoLetter] = special | block | character
 
     lazy val character: Parser[CharacterLetter] =
-      "[^-~\\{}\\s,]".r ^^ (s => CharacterLetter(s.charAt(0)))
+      "[^-~\\{}\\s,]".r ^^ (s ⇒ CharacterLetter(s.charAt(0)))
 
     lazy val sep: Parser[CharacterLetter] =
-      "[-~]".r ^^ (s => CharacterLetter(s.charAt(0)))
+      "[-~]".r ^^ (s ⇒ CharacterLetter(s.charAt(0)))
 
     lazy val block: Parser[BlockLetter] =
       "{" ~>
         rep(block | character
-          | "\\s".r ^^ (s => CharacterLetter(s.charAt(0)))) <~ "}" ^^ BlockLetter
+          | "\\s".r ^^ (s ⇒ CharacterLetter(s.charAt(0)))) <~ "}" ^^ BlockLetter
 
     lazy val special: Parser[SpecialLetter] =
       "{\\" ~> ("'|\"|´|`|\\^|~|[^\\s{}'\"´`^~]+".r <~ "\\s*".r) ~
-        opt(block ^^ (s => (true, s.parts.mkString))
-          | ("\\s*[^{}\\s]+\\s*".r ^^ (s => (false, s.trim)))) <~ "}" ^^ {
-          case spec ~ Some((braces, char)) => SpecialLetter(spec, Some(char), braces)
-          case spec ~ None => SpecialLetter(spec, None, false)
+        opt(block ^^ (s ⇒ (true, s.parts.mkString))
+          | ("\\s*[^{}\\s]+\\s*".r ^^ (s ⇒ (false, s.trim)))) <~ "}" ^^ {
+          case spec ~ Some((braces, char)) ⇒ SpecialLetter(spec, Some(char), braces)
+          case spec ~ None                 ⇒ SpecialLetter(spec, None, false)
         }
 
   }
@@ -77,17 +77,17 @@ object StringUtils {
   def firstCharacter(str: Word): Option[Char] = {
     @tailrec
     def findFirst(letters: List[PseudoLetter]): Option[Char] = letters match {
-      case (_: BlockLetter) :: tail =>
+      case (_: BlockLetter) :: tail ⇒
         findFirst(tail)
-      case SpecialLetter(spec, _, _) :: _ if spec.contains((c: Char) => c.isLetter) =>
+      case SpecialLetter(spec, _, _) :: _ if spec.contains((c: Char) ⇒ c.isLetter) ⇒
         spec.find(_.isLetter)
-      case SpecialLetter(_, Some(char), _) :: _ =>
+      case SpecialLetter(_, Some(char), _) :: _ ⇒
         char.find(_.isAlphaNumeric)
-      case CharacterLetter(c) :: _ if c.isLetter =>
+      case CharacterLetter(c) :: _ if c.isLetter ⇒
         Some(c)
-      case _ :: tail =>
+      case _ :: tail ⇒
         findFirst(tail)
-      case Nil => None
+      case Nil ⇒ None
     }
     findFirst(str.letters)
   }
@@ -111,9 +111,9 @@ final case class BlockLetter(parts: List[PseudoLetter]) extends PseudoLetter {
 final case class SpecialLetter(command: String, arg: Option[String], withBraces: Boolean) extends PseudoLetter {
   override def toString = {
     val argument = arg match {
-      case Some(a) if withBraces => "{" + a + "}"
-      case Some(a) => a
-      case None => ""
+      case Some(a) if withBraces ⇒ "{" + a + "}"
+      case Some(a)               ⇒ a
+      case None                  ⇒ ""
     }
     "{\\" + command + argument + "}"
   }
@@ -135,15 +135,15 @@ final case class ComposedWord(first: Word, second: Word, sep: CharacterLetter) e
 }
 final case class SimpleWord(letters: List[PseudoLetter]) extends Word {
   def this(str: String) = this(str.toCharArray.map(CharacterLetter).toList)
-  val length = letters.foldLeft(0) { (result, current) =>
+  val length = letters.foldLeft(0) { (result, current) ⇒
     def internalCount(letter: PseudoLetter, depth: Int): Int = letter match {
-      case _: CharacterLetter => 1
-      case _: SpecialLetter if depth == 0 =>
+      case _: CharacterLetter ⇒ 1
+      case _: SpecialLetter if depth == 0 ⇒
         // only special characters at brace level 0 count
         1
-      case BlockLetter(parts) =>
+      case BlockLetter(parts) ⇒
         parts.map(internalCount(_, depth + 1)).sum
-      case _ => 0
+      case _ ⇒ 0
     }
     result + internalCount(current, 0)
   }

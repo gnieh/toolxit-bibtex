@@ -33,9 +33,9 @@ case class Author(first: List[Word],
       "\njr: " + jr
 
   override def equals(other: Any) = other match {
-    case Author(f, v, l, j) =>
+    case Author(f, v, l, j) ⇒
       first == f && v == von && l == last && j == jr
-    case _ => false
+    case _ ⇒ false
   }
 
   override def hashCode = {
