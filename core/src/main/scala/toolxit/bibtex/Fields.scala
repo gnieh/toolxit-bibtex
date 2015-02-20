@@ -17,6 +17,8 @@ package toolxit.bibtex
 
 import scala.util.parsing.input.Positional
 
-case class Field(val name: String, val value: Value) extends Positional {
+abstract class BibtexField(val name: String, val value: Value) extends Positional {
   def toBibTeX = name + "=" + value.toBibTeX
 }
+
+case class Field(override val name: String, override val value: Value) extends BibtexField(name, value)
