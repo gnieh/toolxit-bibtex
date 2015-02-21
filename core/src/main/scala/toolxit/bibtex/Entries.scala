@@ -151,3 +151,20 @@ abstract class BibtexEntry(name: String,
 }
 
 case class BibEntry(val name: String, val key: String, val fields: Map[String, Field]) extends BibtexEntry(name, key, fields)
+
+import util.Conversions._
+
+case class Article(val key: String, val fields: BibtexField*) extends BibtexEntry("article", key, fields)
+case class Book(val key: String, val fields: BibtexField*) extends BibtexEntry("book", key, fields)
+case class Booklet(val key: String, val fields: BibtexField*) extends BibtexEntry("booklet", key, fields)
+case class Conference(val key: String, val fields: BibtexField*) extends BibtexEntry("conference", key, fields)
+case class InBook(val key: String, val fields: BibtexField*) extends BibtexEntry("inbook", key, fields)
+case class InCollection(val key: String, val fields: BibtexField*) extends BibtexEntry("incollection", key, fields)
+case class InProceedings(val key: String, val fields: BibtexField*) extends BibtexEntry("inproceedings", key, fields)
+case class Manual(val key: String, val fields: BibtexField*) extends BibtexEntry("manual", key, fields)
+case class MasterThesis(val key: String, val fields: BibtexField*) extends BibtexEntry("masterthesis", key, fields)
+case class Misc(val key: String, val fields: BibtexField*) extends BibtexEntry("misc", key, fields)
+case class PhdThesis(val key: String, val fields: BibtexField*) extends BibtexEntry("phdthesis", key, fields)
+case class Proceedings(val key: String, val fields: BibtexField*) extends BibtexEntry("proceedings", key, fields)
+case class TechReport(val key: String, val fields: BibtexField*) extends BibtexEntry("techreport", key, fields)
+case class Unpublished(val key: String, val fields: BibtexField*) extends BibtexEntry("unpublished", key, fields)

@@ -22,3 +22,15 @@ abstract class BibtexField(val name: String, val value: Value) extends Positiona
 }
 
 case class Field(override val name: String, override val value: Value) extends BibtexField(name, value)
+
+import util.Conversions._
+
+// these case classes are very important since there is no type checking on the bibtex markups in toolxit-bibtex
+case class Title(val inValue: String) extends BibtexField("Title", inValue)
+case class Authors(val inValue: String*) extends BibtexField("Author", inValue.mkString(", "))
+case class Journal(val inValue: String) extends BibtexField("Journal", inValue)
+case class Year(val inValue: Int) extends BibtexField("Year", inValue)
+case class Number(val inValue: Int) extends BibtexField("Number", inValue)
+case class Pages(val inValue: String) extends BibtexField("Pages", inValue)
+case class Volume(val inValue: Int) extends BibtexField("Volume", inValue)
+case class Url(val inValue: String) extends BibtexField("Url", inValue)
