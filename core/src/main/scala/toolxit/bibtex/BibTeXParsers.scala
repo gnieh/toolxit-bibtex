@@ -60,7 +60,7 @@ object BibTeXParsers extends RegexParsers {
     ci("@preamble") ~> "{" ~> concat <~ "}" ^^ PreambleEntry
 
   lazy val comment: Parser[Unit] =
-    ci("@comment") ~> "{" ~> (string | preamble | entry) <~ "}" ^^^ ()
+    ci("@comment") ~> "{" ~> (string | preamble | entry) <~ "}" ^^^ {}
 
   lazy val entry: Parser[BibEntry] =
     ("@" ~> name <~ "{") ~ (key <~ ",") ~ repsep(positioned(field), ",") <~ opt(",") <~ "}" ^^ {
