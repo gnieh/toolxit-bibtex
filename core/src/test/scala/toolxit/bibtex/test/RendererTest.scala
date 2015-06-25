@@ -4,6 +4,8 @@ package test
 import renderer._
 import java.io.{ FileInputStream, InputStreamReader, FileOutputStream, OutputStreamWriter, File }
 import scala.util.Properties
+import toolxit.bibtex.machine.BibTeXException
+
 
 object Renderer extends App {
 
@@ -21,7 +23,7 @@ object Renderer extends App {
 
   parseAll(bibFile,
     new InputStreamReader(new FileInputStream(input), encoding)) match {
-      case Success(res, _) =>
+      case Success(res, _) ⇒
         val renderer = new HtmlRenderer(res).groupByField("year", Descending).sortBy("year")
         val bibrenderer = new BibRenderer(res).groupByType().sortBy("year")
         val html =
@@ -50,7 +52,6 @@ object Renderer extends App {
         bibwriter.flush
         bibwriter.close
 
-      case fail => println(fail)
+      case res: NoSuccess ⇒ BibTeXException(s"Could not parse ${bibFile}", List(res.msg))
     }
-
 }
