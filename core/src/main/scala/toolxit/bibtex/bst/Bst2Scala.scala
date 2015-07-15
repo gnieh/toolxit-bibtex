@@ -38,9 +38,9 @@ import scala.collection.mutable.Map
  *
  */
 class Bst2Scala(val bst: BstFile,
-                val className: String,
-                val packageName: String,
-                out: Writer) {
+    val className: String,
+    val packageName: String,
+    out: Writer) {
 
   // ======== the rendering methods to generated ========
 

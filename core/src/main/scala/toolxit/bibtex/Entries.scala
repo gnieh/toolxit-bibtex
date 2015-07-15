@@ -22,8 +22,8 @@ import scala.util.parsing.input.Positional
 sealed trait Raw extends Positional
 
 final case class BibTeXDatabase(entries: List[BibEntry],
-                                strings: List[StringEntry],
-                                preambles: List[PreambleEntry]) extends Raw {
+    strings: List[StringEntry],
+    preambles: List[PreambleEntry]) extends Raw {
 
   /** Finds the BibTeX entry associated to the key, if any */
   def find(key: String) = entries.find {
@@ -134,8 +134,8 @@ case object EmptyValue extends Value {
 final case class PreambleEntry(value: ConcatValue) extends Entry
 
 abstract class BibtexEntry(name: String,
-                           key: String,
-                           fields: Map[String, BibtexField]) extends Entry {
+    key: String,
+    fields: Map[String, BibtexField]) extends Entry {
   var sortKey = key
 
   def sortValue = fields.find(_._1 == sortKey).map(_._2.value).getOrElse(EmptyValue)

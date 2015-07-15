@@ -87,8 +87,7 @@ object AuthorNameExtractor {
           else
             last ++ List(part)
         last = Nil
-      }
-      else if (isFirstCharacterLower(part)) {
+      } else if (isFirstCharacterLower(part)) {
         hasVon = true
         isFirst = false
         von =
@@ -96,11 +95,9 @@ object AuthorNameExtractor {
             von ++ List(part)
           else
             List(part)
-      }
-      else if (isFirst) {
+      } else if (isFirst) {
         first = first ++ List(part)
-      }
-      else {
+      } else {
         last = last ++ List(part)
       }
     }
@@ -120,15 +117,13 @@ object AuthorNameExtractor {
           else
             last ++ List(part)
         last = Nil
-      }
-      else if (isFirstCharacterLower(part) && hasVon) {
+      } else if (isFirstCharacterLower(part) && hasVon) {
         von =
           if (von.nonEmpty)
             von ++ List(part)
           else
             List(part)
-      }
-      else {
+      } else {
         if (first)
           hasVon = false
         last = last ++ List(part)

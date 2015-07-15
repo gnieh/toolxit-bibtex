@@ -38,8 +38,7 @@ object AuthorNamesExtractor extends StringUtils.StringParser {
     parseAll(names, authors).getOrElse(Nil).map { author ⇒
       try {
         AuthorNameExtractor.parse(author)
-      }
-      catch {
+      } catch {
         case e: Exception ⇒
           println("Wrong author format: " + author)
           println(e.getMessage)

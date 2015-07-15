@@ -455,15 +455,15 @@ class HtmlRenderer(db: BibTeXDatabase)
     StringFormatters.flatten
 
   private def renderEntry(key: String,
-                          title: Value,
-                          author: Value,
-                          booktitle: Option[Value],
-                          publisher: Option[Value],
-                          year: Option[Value],
-                          comment: Option[Value],
-                          url: Option[Value],
-                          doi: Option[Value],
-                          bib: String) =
+    title: Value,
+    author: Value,
+    booktitle: Option[Value],
+    publisher: Option[Value],
+    year: Option[Value],
+    comment: Option[Value],
+    url: Option[Value],
+    doi: Option[Value],
+    bib: String) =
     Group(List(
       <span class="bibtitle">{
         url match {

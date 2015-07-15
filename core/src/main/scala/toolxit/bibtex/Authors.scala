@@ -16,9 +16,9 @@
 package toolxit.bibtex
 
 case class Author(first: List[Word],
-                  von: List[Word],
-                  last: List[Word],
-                  jr: List[Word]) {
+    von: List[Word],
+    last: List[Word],
+    jr: List[Word]) {
 
   def this(first: String, von: String, last: String, jr: String) =
     this(StringUtils.StringParser.parseAll(StringUtils.StringParser.string, first).get,

@@ -169,7 +169,7 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase)(implicit val def
    * This method returns this renderer object to allow the user to chain calls.
    */
   def groupByField(fieldName: String,
-                   direction: Direction = Ascending): this.type = modify {
+    direction: Direction = Ascending): this.type = modify {
     _groupByField = Option(fieldName)
     _groupDirection = direction
   }
@@ -283,8 +283,7 @@ abstract class BibTeXRenderer[Rendered](val db: BibTeXDatabase)(implicit val def
   private[this] def modify(block: ⇒ Any): this.type = {
     try {
       block
-    }
-    finally {
+    } finally {
       _cached = None
     }
     this

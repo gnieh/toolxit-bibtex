@@ -129,21 +129,21 @@ object Pattern {
     Some((p.full, p.before, p.separator, p.after))
 }
 case class FirstPattern(full: Boolean,
-                        before: Option[String],
-                        separator: String,
-                        after: Option[String]) extends Pattern
+  before: Option[String],
+  separator: String,
+  after: Option[String]) extends Pattern
 case class LastPattern(full: Boolean,
-                       before: Option[String],
-                       separator: String,
-                       after: Option[String]) extends Pattern
+  before: Option[String],
+  separator: String,
+  after: Option[String]) extends Pattern
 case class VonPattern(full: Boolean,
-                      before: Option[String],
-                      separator: String,
-                      after: Option[String]) extends Pattern
+  before: Option[String],
+  separator: String,
+  after: Option[String]) extends Pattern
 case class JrPattern(full: Boolean,
-                     before: Option[String],
-                     separator: String,
-                     after: Option[String]) extends Pattern
+  before: Option[String],
+  separator: String,
+  after: Option[String]) extends Pattern
 case class Other(text: String) extends Part
 
 object PatternParser extends RegexParsers {

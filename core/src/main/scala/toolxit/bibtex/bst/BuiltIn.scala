@@ -208,13 +208,11 @@ trait BuiltIn[Rendered] {
         val formatter = formatters.getOrElseUpdate(pattern, new NameFormatter(pattern))
         // returns the formatted name
         TSome(formatter(list(authorNb)))
-      }
-      catch {
+      } catch {
         case e: Exception ⇒
           TError("Unable to call `format,name$' function:\n", e)
       }
-    }
-    else {
+    } else {
       // author does not exist
       TError(authorNb + "-th author does not exist in {" + authorList + "}")
     }

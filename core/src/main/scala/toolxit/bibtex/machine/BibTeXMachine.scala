@@ -32,9 +32,9 @@ case class BibTeXException(msg: String, errors: List[String]) extends Exception(
  *
  */
 class BibTeXMachine(auxReader: Reader,
-                    bstReader: Reader,
-                    bibReader: Reader,
-                    output: Writer)
+  bstReader: Reader,
+  bibReader: Reader,
+  output: Writer)
     extends Environment
     with StackMachine
     with BuiltIn[Unit] {
@@ -80,13 +80,11 @@ class BibTeXMachine(auxReader: Reader,
         println(error)
         None
     }
-  }
-  catch {
+  } catch {
     case e: Exception ⇒
       e.printStackTrace
       None
-  }
-  finally {
+  } finally {
     bstReader.close
   }
 
@@ -101,13 +99,11 @@ class BibTeXMachine(auxReader: Reader,
       .map(cite ⇒
         citationRegex.r.findFirstMatchIn(cite).get.group(1))
     Some(AuxFile(style, citations))
-  }
-  catch {
+  } catch {
     case e: Exception ⇒
       e.printStackTrace
       None
-  }
-  finally {
+  } finally {
     auxReader.close
   }
 
@@ -118,13 +114,11 @@ class BibTeXMachine(auxReader: Reader,
         println(error)
         None
     }
-  }
-  catch {
+  } catch {
     case e: Exception ⇒
       e.printStackTrace
       None
-  }
-  finally {
+  } finally {
     bibReader.close
   }
 
@@ -502,8 +496,7 @@ class BibTeXMachine(auxReader: Reader,
       case BstNewline ⇒
         if (buffer.isEmpty) {
           output.write("\n")
-        }
-        else {
+        } else {
           // flush the buffer to the file
           output.write(buffer.toString)
           output.flush

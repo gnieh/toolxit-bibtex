@@ -23,13 +23,13 @@ final case class BstFile(commands: List[BstCommand])
 sealed trait BstCommand extends Positional
 
 final case class BstEntry(fields: List[String],
-                          integers: List[String],
-                          strings: List[String]) extends BstCommand
+  integers: List[String],
+  strings: List[String]) extends BstCommand
 
 final case class BstExecute(name: String) extends BstCommand
 
 final case class BstFunction(name: String,
-                             instructions: BstBlock) extends BstCommand
+  instructions: BstBlock) extends BstCommand
 
 final case class BstIntegers(integers: List[String]) extends BstCommand
 

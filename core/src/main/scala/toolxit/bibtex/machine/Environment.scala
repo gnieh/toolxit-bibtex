@@ -62,16 +62,13 @@ trait Environment {
         if (fields.contains(name)) {
           // it is a field
           fields(name).get(entryName)
-        }
-        else if (entryVariables.contains(name)) {
+        } else if (entryVariables.contains(name)) {
           // it is not a field, maybe an entry variable
           entryVariables(name).get(entryName)
-        }
-        else {
+        } else {
           None
         }
-      }
-      else {
+      } else {
         None
       }
 
@@ -86,8 +83,7 @@ trait Environment {
       else
         // at last lookup for a function
         functions.get(name)
-    }
-    else {
+    } else {
       result
     }
   }
@@ -105,8 +101,7 @@ trait Environment {
         case _ ⇒ value
       }
       entryVariables(name)(entryName) = real
-    }
-    else if (globalVariables.contains(name)) {
+    } else if (globalVariables.contains(name)) {
       // truncate to the global max
       val real = value match {
         case StringVariable(Some(s)) if s.length > globalMax.value.get ⇒
@@ -114,8 +109,7 @@ trait Environment {
         case _ ⇒ value
       }
       globalVariables(name) = real
-    }
-    else {
+    } else {
       throw BibTeXException("Unable to run .bst file",
         List(name + " is not declared, thus cannot be assigned"))
     }
