@@ -8,6 +8,4 @@ addSbtPlugin("org.scalaxb" % "sbt-scalaxb" % "1.2.1")
 
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "0.2.1")
 
-resolvers += "ISC-PIF" at "http://maven.iscpif.fr/public/"
-
 resolvers += Resolver.sonatypeRepo("public")

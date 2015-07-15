@@ -22,8 +22,12 @@ trait Settings <: Build {
 
   lazy val commonSettings = settings ++ scalariform
 
+  lazy val nonPublishSettings =
+    commonSettings ++
+      Seq (publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo"))))
+
   lazy val publishSettings =
-    settings ++
+    commonSettings ++
       Seq (
       organization := "toolxit.bibtex",
       resolvers ++= Seq("ISC-PIF" at "http://maven.iscpif.fr/public/", Resolver.sonatypeRepo("snapshots"), Resolver.sonatypeRepo("releases")),
@@ -56,7 +60,7 @@ trait ToolxitBibtexComponents <: Settings {
   lazy val macros = Project(
     "macros",
     file("macros"),
-    settings = commonSettings ++ Seq(
+    settings = nonPublishSettings ++ Seq(
       libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
       libraryDependencies := {
         CrossVersion.partialVersion(scalaVersion.value) match {
@@ -77,7 +81,7 @@ trait ToolxitBibtexComponents <: Settings {
   lazy val core = Project(
     "core",
     file("core"),
-    settings = commonSettings ++ Seq(
+    settings = nonPublishSettings ++ Seq(
       libraryDependencies ++= Seq (
         "org.freemarker" % "freemarker" % "2.3.19",
         "junit" % "junit" % "4.10" % "test",
@@ -107,7 +111,7 @@ trait ToolxitBibtex <: Settings with ToolxitBibtexComponents {
   lazy val root = Project(
     "root",
     file("."),
-    settings = publishSettings ++ scalariform ++ Seq(
+    settings = publishSettings ++ Seq(
       run <<= run in Compile in core,
       publishArtifact in (Compile, packageBin) := true,
       // include the macro classes and resources in the main jar
