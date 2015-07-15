@@ -1,33 +1,62 @@
 import sbt._
 import Keys._
 
-object BuildSettings {
-  val buildSettings = Defaults.defaultSettings ++ Seq(
-    organization := "toolxit.bibtex",
-    version := "0.1-SNAPSHOT",
-    scalaVersion := "2.11.6",
+import scalariform.formatter.preferences._
+import com.typesafe.sbt.SbtScalariform._
+
+trait Settings <: Build {
+
+  override def settings = super.settings ++ Seq (
+    scalaVersion := "2.11.7",
     crossScalaVersions := Seq("2.10.2", "2.10.3", "2.10.4", "2.10.5", "2.11.0", "2.11.1", "2.11.2", "2.11.3", "2.11.4",
-      "2.11.5", "2.11.6"),
-    resolvers += Resolver.sonatypeRepo("snapshots"),
-    resolvers += Resolver.sonatypeRepo("releases"),
-    scalacOptions ++= Seq("-deprecation")
+      "2.11.5", "2.11.6", "2.11.7"),
+    javacOptions in (Compile, compile) ++= Seq("-source", "1.7", "-target", "1.7"),
+    scalacOptions ++= Seq("-target:jvm-1.7", "-deprecation")
   )
+
+  lazy val scalariform = scalariformSettings ++ Seq(
+    ScalariformKeys.preferences :=
+      ScalariformKeys.preferences.value
+        .setPreference(AlignSingleLineCaseStatements, true)
+        .setPreference(RewriteArrowSymbols, true) )
+
+  lazy val commonSettings = settings ++ scalariform
+
+  lazy val publishSettings =
+    settings ++
+      Seq (
+      organization := "toolxit.bibtex",
+      resolvers ++= Seq("ISC-PIF" at "http://maven.iscpif.fr/public/", Resolver.sonatypeRepo("snapshots"), Resolver.sonatypeRepo("releases")),
+      publishTo <<= isSnapshot { snapshot =>
+        val nexus = "https://oss.sonatype.org/"
+        if (snapshot) Some("snapshots" at nexus + "content/repositories/snapshots")
+        else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+      },
+      pomIncludeRepository := { _ => false},
+      licenses := Seq("GPLv3" -> url("http://www.gnu.org/licenses/")),
+      homepage := Some(url("https://github.com/jopasserat/toolxit-bibtex")),
+      scmInfo := Some(ScmInfo(url("https://github.com/jopasserat/toolxit-bibtex.git"), "scm:git:git@github.com:jopasserat/toolxit-bibtex.git")),
+      // To sync with Maven central, you need to supply the following information:
+      pomExtra := {
+        <!-- Developer contact information -->
+          <developers>
+            <developer>
+              <id>jopasserat</id>
+              <name>Jonathan Passerat-Palmbach</name>
+              <url>https://github.com/jopasserat/</url>
+            </developer>
+          </developers>
+      }
+    )
+
 }
 
-object MyBuild extends Build {
-  import BuildSettings._
+trait ToolxitBibtexComponents <: Settings {
 
-  lazy val root: Project = Project(
-    "root",
-    file("."),
-    settings = buildSettings ++ Seq(
-      run <<= run in Compile in core)
-  ) aggregate(macros, core)
-
-  lazy val macros: Project = Project(
+  lazy val macros = Project(
     "macros",
     file("macros"),
-    settings = buildSettings ++ Seq(
+    settings = commonSettings ++ Seq(
       libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
       libraryDependencies := {
         CrossVersion.partialVersion(scalaVersion.value) match {
@@ -40,14 +69,15 @@ object MyBuild extends Build {
             compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full),
             "org.scalamacros" %% "quasiquotes" % "2.1.0-M5" cross CrossVersion.binary)
         }
-      }
+      },
+      publishArtifact := false
     )
   )
 
-  lazy val core: Project = Project(
+  lazy val core = Project(
     "core",
     file("core"),
-    settings = buildSettings ++ Seq(
+    settings = commonSettings ++ Seq(
       libraryDependencies ++= Seq (
         "org.freemarker" % "freemarker" % "2.3.19",
         "junit" % "junit" % "4.10" % "test",
@@ -65,7 +95,27 @@ object MyBuild extends Build {
           case Some((2, 10)) =>
             libraryDependencies.value
         }
-      }
+      },
+      publishArtifact := false
     )
   ) dependsOn(macros)
+
 }
+
+trait ToolxitBibtex <: Settings with ToolxitBibtexComponents {
+
+  lazy val root = Project(
+    "root",
+    file("."),
+    settings = publishSettings ++ scalariform ++ Seq(
+      run <<= run in Compile in core,
+      publishArtifact in (Compile, packageBin) := true,
+      // include the macro classes and resources in the main jar
+      mappings in (Compile, packageBin) ++=
+        mappings.in(macros, Compile, packageBin).value ++
+        mappings.in(core, Compile, packageBin).value
+    )
+  ) aggregate(macros, core)
+}
+
+object ToolxitBibtexBuild extends Build with ToolxitBibtex
