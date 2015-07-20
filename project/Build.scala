@@ -118,7 +118,7 @@ trait ToolxitBibtex <: Settings with ToolxitBibtexComponents {
       osgiSettings ++
       Seq(
         organization := "org.openmole",
-        importPackage := Seq("*"),
+        importPackage := Seq("scala.*"),
         privatePackage := Seq("!scala.*", "*"),
         bundleSymbolicName := "toolxit.bibtex",
         exportPackage := Seq("toolxit.bibtex.*"),
