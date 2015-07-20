@@ -7,3 +7,15 @@ For example, it provides following features:
  - Implementation of the BibTeX stack machine
  - Renderers for .bib files to produce plain text, xml, html representation of a BibTeX database
  - A .bst to Scala translator (TODO)
+
+You can depend on this library by using this line in your sbt script:
+
+    libraryDependencies += "org.openmole" %% "toolxit-bibtex" % "0.1-SNAPSHOT"
+
+or in a Maven pom.xml:
+
+    <dependency>
+      <groupId>org.openmole</groupId>
+      <artifactId>toolxit-bibtex</artifactId>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
