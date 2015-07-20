@@ -1,3 +1,5 @@
+import com.typesafe.sbt.osgi.OsgiKeys._
+import com.typesafe.sbt.osgi.SbtOsgi._
 import sbt._
 import Keys._
 
@@ -108,18 +110,21 @@ trait ToolxitBibtexComponents <: Settings {
 
 trait ToolxitBibtex <: Settings with ToolxitBibtexComponents {
 
-  lazy val root = Project(
-    "root",
-    file("."),
-    settings = publishSettings ++ Seq(
-      run <<= run in Compile in core,
-      publishArtifact in (Compile, packageBin) := true,
-      // include the macro classes and resources in the main jar
-      mappings in (Compile, packageBin) ++=
-        mappings.in(macros, Compile, packageBin).value ++
-        mappings.in(core, Compile, packageBin).value
-    )
-  ) aggregate(macros, core)
+  lazy val toolxitBibtex = Project(
+    "toolxit-bibtex",
+    file("target/bundle")
+    ).settings (
+      (publishSettings ++
+      osgiSettings ++
+      Seq(
+        organization := "org.openmole",
+        importPackage := Seq("*"),
+        privatePackage := Seq("!scala.*", "*"),
+        bundleSymbolicName := "toolxit.bibtex",
+        exportPackage := Seq("toolxit.bibtex.*"),
+        publishArtifact in (Compile, packageBin) := true,
+        publishArtifact in (Test, packageBin) := false
+      )): _* ) dependsOn(macros, core)
 }
 
 object ToolxitBibtexBuild extends Build with ToolxitBibtex
