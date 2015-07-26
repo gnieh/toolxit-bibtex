@@ -80,8 +80,7 @@ class Bst2Scala(val bst: BstFile,
         values("fields") = fields
         values("ints") = integers
         values("strings") = strings
-      case BstExecute(name) ⇒
-
+      case _ ⇒
     }
   }
 

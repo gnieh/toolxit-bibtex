@@ -17,7 +17,7 @@
 
 package toolxit.bibtex.macros
 
-import scala.reflect.macros.Context
+import scala.reflect.macros.blackbox
 import scala.language.experimental.macros
 
 // from http://stackoverflow.com/a/16591277/470341
@@ -26,14 +26,15 @@ object OctalLiterals {
     def o(): Int = macro oImpl
   }
 
-  def oImpl(c: Context)(): c.Expr[Int] = {
+  def oImpl(c: blackbox.Context)(): c.Expr[Int] = {
     import c.universe._
 
-    c.literal(c.prefix.tree match {
-      case Apply(_, Apply(_, Literal(Constant(oct: String)) :: Nil) :: Nil) ⇒
-        Integer.decode("0" + oct)
-      case _ ⇒ c.abort(c.enclosingPosition, "Invalid octal literal.")
-    })
+    c.Expr(q"""${
+      c.prefix.tree match {
+        case Apply(_, Apply(_, Literal(Constant(oct: String)) :: Nil) :: Nil) ⇒
+          Integer.decode("0" + oct).toInt
+        case _ ⇒ c.abort(c.enclosingPosition, "Invalid octal literal.")
+      }
+    }""")
   }
 }
-
