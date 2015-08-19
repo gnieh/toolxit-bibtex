@@ -1,9 +1,5 @@
 
-import SonatypeKeys._
-
-import com.typesafe.sbt.pgp.PgpKeys._
-
-sonatypeSettings
+import ReleaseTransformations._
 
 organization := "org.openmole"
 
@@ -15,6 +11,25 @@ publishArtifact := false
 
 publishArtifact in Test := false
 
-scalariformSettings
+releaseVersionBump := sbtrelease.Version.Bump.Minor
 
-//releaseSettings
+releaseTagComment    := s"Releasing ${(version in ThisBuild).value}"
+
+releaseCommitMessage := s"Bump version to ${(version in ThisBuild).value}"
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  ReleaseStep(action = Command.process("publishSigned", _)),
+  setNextVersion,
+  commitNextVersion,
+  ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
+  pushChanges
+)
+
+scalariformSettings
