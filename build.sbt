@@ -17,4 +17,4 @@ publishArtifact in Test := false
 
 scalariformSettings
 
-releaseSettings
+//releaseSettings
