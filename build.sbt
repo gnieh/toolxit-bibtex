@@ -23,7 +23,6 @@ releaseProcess := Seq[ReleaseStep](
   runClean,
   runTest,
   setReleaseVersion,
-  commitReleaseVersion,
   tagRelease,
   ReleaseStep(action = Command.process("publishSigned", _)),
   setNextVersion,
