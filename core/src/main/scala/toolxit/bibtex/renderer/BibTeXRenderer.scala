@@ -16,7 +16,8 @@
 package toolxit.bibtex
 package renderer
 
-import scala.collection.mutable.{ HashMap, MultiMap, LinkedHashSet }
+import scala.collection.mutable.{ HashMap, LinkedHashSet }
+import scala.language.reflectiveCalls
 
 /**
  * A BibTeX renderer allows the user to output a BibTeX database in

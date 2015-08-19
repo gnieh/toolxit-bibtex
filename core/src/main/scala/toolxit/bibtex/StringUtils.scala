@@ -17,6 +17,8 @@ package toolxit.bibtex
 
 import scala.util.parsing.combinator.RegexParsers
 import scala.annotation.tailrec
+import scala.language.reflectiveCalls
+import scala.language.implicitConversions
 
 /**
  * @author Lucas Satabin

@@ -20,8 +20,8 @@ package util
 
 object Conversions {
 
-  import toolxit.bibtex.StringValue
-  import toolxit.bibtex.IntValue
+  import scala.language.postfixOps
+  import scala.language.implicitConversions
 
   implicit def string2StringValue(s: String) = StringValue(s)
   implicit def int2IntValue(i: Int) = IntValue(i)
