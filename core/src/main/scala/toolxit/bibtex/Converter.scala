@@ -1,12 +1,11 @@
 package toolxit.bibtex
-package test
 
 import renderer._
 import java.io.{ FileInputStream, InputStreamReader, FileOutputStream, OutputStreamWriter, File }
 import scala.util.Properties
 import toolxit.bibtex.machine.BibTeXException
 
-object Renderer extends App {
+object Converter extends App {
 
   import BibTeXParsers._
 
@@ -16,7 +15,7 @@ object Renderer extends App {
     args(0)
 
   val encoding = if (args.length < 2)
-    "ISO-8859-15"
+    "UTF-8"
   else
     args(1)
 
@@ -37,12 +36,14 @@ object Renderer extends App {
             </body>
           </html>
 
-        val file = new File(Properties.userHome, "bib.html")
-        val writer = new OutputStreamWriter(
-          new FileOutputStream(file), encoding)
-        writer.write(html.toString)
-        writer.flush
-        writer.close
+        val htmlFile = new File(Properties.userHome, "bib.html")
+
+        println(s"Writing to ${htmlFile}")
+        val htmlWriter = new OutputStreamWriter(
+          new FileOutputStream(htmlFile), encoding)
+        htmlWriter.write(html.toString)
+        htmlWriter.flush
+        htmlWriter.close
 
         val bibfile = new File(Properties.userHome, "bib.bib")
         val bibwriter = new OutputStreamWriter(
@@ -51,6 +52,6 @@ object Renderer extends App {
         bibwriter.flush
         bibwriter.close
 
-      case res: NoSuccess ⇒ BibTeXException(s"Could not parse ${bibFile}", List(res.msg))
+      case res: NoSuccess ⇒ throw new BibTeXException(s"Could not parse ${bibFile}", List(res.msg))
     }
 }
