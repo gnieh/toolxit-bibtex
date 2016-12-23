@@ -17,7 +17,7 @@
 
 import com.typesafe.sbt.osgi.OsgiKeys._
 import com.typesafe.sbt.osgi.SbtOsgi._
-import sbt._
+import sbt.{CrossVersion, _}
 import Keys._
 
 import scalariform.formatter.preferences._
@@ -25,12 +25,17 @@ import com.typesafe.sbt.SbtScalariform._
 
 trait Settings <: Build {
 
+  lazy val javaVersion = settingKey[String]("Defines Java version according to Scala version in X compile'")
+
   override def settings = super.settings ++ Seq (
-    scalaVersion := "2.11.7",
-    crossScalaVersions := Seq("2.10.2", "2.10.3", "2.10.4", "2.10.5", "2.11.0", "2.11.1", "2.11.2", "2.11.3", "2.11.4",
-      "2.11.5", "2.11.6", "2.11.7"),
-    javacOptions in (Compile, compile) ++= Seq("-source", "1.7", "-target", "1.7"),
-    scalacOptions ++= Seq("-target:jvm-1.7", "-deprecation", "-feature")
+    scalaVersion := "2.12.1",
+    crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
+    javaVersion := { CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, scalaMajor)) if scalaMajor >= 11 => "1.8"
+      case Some((2, 10)) =>"1.7"
+    }},
+    javacOptions in (Compile, compile) ++= Seq("-source", javaVersion.value, "-target", javaVersion.value),
+    scalacOptions ++= Seq(s"-target:jvm-${javaVersion.value}", "-deprecation", "-feature")
   )
 
   lazy val scalariform = scalariformSettings ++ Seq(
@@ -80,6 +85,12 @@ trait ToolxitBibtexComponents <: Settings {
     "macros",
     file("macros"),
     settings = nonPublishSettings ++ Seq(
+      // macros syntax is different from 2.10 to 2.11+...
+      unmanagedSourceDirectories in Compile <+= (sourceDirectory in Compile, scalaVersion){
+        (s,v) =>
+          val scalaMajor = if (v.startsWith("2.10")) "2.10" else "2.11+"
+          s / s"scala-$scalaMajor"
+      },
       libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
       libraryDependencies := {
         CrossVersion.partialVersion(scalaVersion.value) match {
@@ -89,8 +100,8 @@ trait ToolxitBibtexComponents <: Settings {
           // in Scala 2.10, quasiquotes are provided by macro paradise
           case Some((2, 10)) =>
           libraryDependencies.value ++ Seq(
-            compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full),
-            "org.scalamacros" %% "quasiquotes" % "2.1.0-M5" cross CrossVersion.binary)
+            compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+            "org.scalamacros" %% "quasiquotes" % "2.1.0" cross CrossVersion.binary)
         }
       },
       publishArtifact := false
@@ -104,15 +115,15 @@ trait ToolxitBibtexComponents <: Settings {
       libraryDependencies ++= Seq (
         "org.freemarker" % "freemarker" % "2.3.19",
         "junit" % "junit" % "4.10" % "test",
-        "org.scalatest" % s"scalatest" % "2.2.4" % "test" cross CrossVersion.binary
+        "org.scalatest" % s"scalatest" % "3.0.1" % "test" cross CrossVersion.binary
       ),
       libraryDependencies := {
         CrossVersion.partialVersion(scalaVersion.value) match {
           // if Scala 2.11+ is used, the now external xml and parser combinators shall be added
           case Some((2, scalaMajor)) if scalaMajor >= 11 =>
             libraryDependencies.value ++ Seq(
-              "org.scala-lang.modules" %% "scala-xml" % "1.0.3",
-              "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3"
+              "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
+              "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.5"
             )
           // in Scala 2.10, xml and parser combinators are shipped with the library
           case Some((2, 10)) =>
