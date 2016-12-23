@@ -17,24 +17,22 @@
 
 package toolxit.bibtex.macros
 
-import scala.reflect.macros.blackbox
 import scala.language.experimental.macros
+import scala.reflect.macros.Context
 
-// from http://stackoverflow.com/a/16591277/470341
+// straight from http://stackoverflow.com/a/16591277/470341, thanks @travisbrown :)
 object OctalLiterals {
   implicit class OctallerContext(sc: StringContext) {
     def o(): Int = macro oImpl
   }
 
-  def oImpl(c: blackbox.Context)(): c.Expr[Int] = {
+  def oImpl(c: Context)(): c.Expr[Int] = {
     import c.universe._
 
-    c.Expr(q"""${
-      c.prefix.tree match {
-        case Apply(_, Apply(_, Literal(Constant(oct: String)) :: Nil) :: Nil) ⇒
-          Integer.decode("0" + oct).toInt
-        case _ ⇒ c.abort(c.enclosingPosition, "Invalid octal literal.")
-      }
-    }""")
+    c.literal(c.prefix.tree match {
+      case Apply(_, Apply(_, Literal(Constant(oct: String)) :: Nil) :: Nil) =>
+        Integer.decode("0" + oct)
+      case _ => c.abort(c.enclosingPosition, "Invalid octal literal.")
+    })
   }
 }
