@@ -10,16 +10,17 @@ For example, it provides following features:
 
 You can depend on this library by using this line in your sbt script:
 
-    libraryDependencies += "org.openmole" %% "toolxit-bibtex" % "0.1"
+    libraryDependencies += "org.openmole" %% "toolxit-bibtex" % {toolxit-bibtex-version}
 
 or in a Maven pom.xml:
 
     <dependency>
       <groupId>org.openmole</groupId>
       <artifactId>toolxit-bibtex</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>{toolxit-bibtex-version}</version>
     </dependency>
 
+The latest versions can be found in the [release page](https://github.com/jopasserat/toolxit-bibtex/releases).
 
 ###Development###
 
@@ -28,3 +29,4 @@ The library can be generated locally using:
 
 To release in one step, use:
 `sbt 'release with-defaults'`
+
